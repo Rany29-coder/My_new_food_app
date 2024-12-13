@@ -1,8 +1,18 @@
-# My New Food App
+# Culturally Relevant Food-Saving Application for the Arab Market
 
-**My New Food App** is a Flutter-based mobile application built with Firebase to connect buyers and sellers, focusing on selling discounted food items to reduce waste and benefit the environment. It offers robust functionality for both buyers and sellers, allowing them to interact efficiently while tracking their contributions and performance.
+**Project Title:** Designing a Culturally Relevant Food-Saving Application for the Arab Market: Leveraging Cognitive Neuroscience and UX Design  
+**Author:** Rany Hanna  
+
+This Capstone project involves developing a food-saving mobile application that caters specifically to the Arab market, integrating cultural, social, and cognitive principles to create an impactful user experience. The application is designed to address food waste while respecting cultural norms of hospitality and generosity, offering a platform that balances sustainability with cultural relevance.
 
 ---
+
+## Project Overview
+
+The app focuses on reducing food waste by connecting buyers and sellers within the Arab market. It leverages culturally resonant features, such as community-focused incentives, a character-driven user experience, and religiously aligned messaging, to encourage sustainable practices. The application also incorporates advanced Firebase features to track user contributions and engagement while maintaining strict ethical standards for data usage.
+
+---
+
 
 ## Features
 
