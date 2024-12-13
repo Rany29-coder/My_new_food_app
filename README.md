@@ -113,7 +113,6 @@ Platform-specific code for building Android and iOS apps.
 - Add push notifications for order updates and new product deals.
 - Integrate payment gateways for seamless transactions.
 - Introduce a loyalty rewards system for frequent buyers.
-- Enable analytics for sellers to gain deeper insights into their business.
 
 ---
 
@@ -123,5 +122,5 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 ---
 
 ## Contact
-For inquiries or collaboration, contact [Your Name] at [your.email@example.com].
+For inquiries or collaboration, contact Me at [ranymagdy@uni.minerva.edu] .
 ```
