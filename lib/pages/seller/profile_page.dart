@@ -5,6 +5,11 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 
+/// Use the same color constants as your other pages
+const kBackgroundColor = Color(0xFFFAF3E0);
+const kDarkBrown = Color(0xFF5A3D2B);
+const kSoftBrown = Color(0xFF8B5E3C);
+
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
 
@@ -33,7 +38,24 @@ class _ProfilePageState extends State<ProfilePage> {
     _contactDetailsController = TextEditingController();
     _businessHoursController = TextEditingController();
     _deliveryOptionsController = TextEditingController();
+
     _fetchStoreData();
+  }
+
+  /// Common InputDecoration for consistency
+  InputDecoration _inputDecoration(String label) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(color: kDarkBrown),
+      focusedBorder: OutlineInputBorder(
+        borderSide: const BorderSide(color: kSoftBrown),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderSide: const BorderSide(color: kDarkBrown),
+        borderRadius: BorderRadius.circular(8),
+      ),
+    );
   }
 
   Future<void> _fetchStoreData() async {
@@ -53,7 +75,9 @@ class _ProfilePageState extends State<ProfilePage> {
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching store info: $e')),
+      );
     }
   }
 
@@ -63,119 +87,191 @@ class _ProfilePageState extends State<ProfilePage> {
         _contactDetailsController.text.isEmpty ||
         _businessHoursController.text.isEmpty ||
         _deliveryOptionsController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please fill all fields')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all fields')),
+      );
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
       final user = _auth.currentUser;
       if (user != null) {
         String? storeLogoUrl;
 
-        // Save store logo to Firebase Storage
+        // Upload store logo if changed
         if (_storeLogo != null) {
           final storageRef = FirebaseStorage.instance
               .ref()
               .child('store_logos')
-              .child(user.uid + '.jpg');
+              .child('${user.uid}.jpg');
           await storageRef.putFile(_storeLogo!);
           storeLogoUrl = await storageRef.getDownloadURL();
         }
 
         await _firestore.collection('stores').doc(user.uid).update({
-          'storeName': _storeNameController.text,
-          'address': _addressController.text,
-          'contactDetails': _contactDetailsController.text,
-          'businessHours': _businessHoursController.text,
-          'deliveryOptions': _deliveryOptionsController.text,
+          'storeName': _storeNameController.text.trim(),
+          'address': _addressController.text.trim(),
+          'contactDetails': _contactDetailsController.text.trim(),
+          'businessHours': _businessHoursController.text.trim(),
+          'deliveryOptions': _deliveryOptionsController.text.trim(),
           if (storeLogoUrl != null) 'storeLogo': storeLogoUrl,
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Store information updated successfully')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Store information updated successfully')),
+        );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating store info: $e')),
+      );
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
   }
 
   Future<void> _pickStoreLogo() async {
-    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        _storeLogo = File(pickedFile.path);
-      });
+    try {
+      final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+      if (pickedFile != null) {
+        setState(() {
+          _storeLogo = File(pickedFile.path);
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error picking store logo: $e')),
+      );
     }
   }
 
   Future<void> _logout() async {
-  try {
-    await _auth.signOut();
-    Navigator.of(context).pushReplacementNamed('/login');
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error logging out: $e')));
+    try {
+      await _auth.signOut();
+      Navigator.of(context).pushReplacementNamed('/login');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error logging out: $e')),
+      );
+    }
   }
-}
 
+  @override
+  void dispose() {
+    _storeNameController.dispose();
+    _addressController.dispose();
+    _contactDetailsController.dispose();
+    _businessHoursController.dispose();
+    _deliveryOptionsController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      /// Off-white background
+      backgroundColor: kBackgroundColor,
+
+      /// Soft brown appBar
       appBar: AppBar(
-        title: Text('Profile'),
+        backgroundColor: kSoftBrown,
+        title: const Text('Profile', style: TextStyle(color: Colors.white)),
         actions: [
           IconButton(
-            icon: Icon(Icons.logout),
+            icon: const Icon(Icons.logout, color: Colors.white),
             onPressed: _logout,
           ),
         ],
       ),
+
+      /// Main content
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            /// Store Name
             TextField(
               controller: _storeNameController,
-              decoration: InputDecoration(labelText: 'Store Name'),
+              decoration: _inputDecoration('Store Name'),
+              style: const TextStyle(color: kDarkBrown),
             ),
+            const SizedBox(height: 10),
+
+            /// Address
             TextField(
               controller: _addressController,
-              decoration: InputDecoration(labelText: 'Address'),
+              decoration: _inputDecoration('Address'),
+              style: const TextStyle(color: kDarkBrown),
             ),
+            const SizedBox(height: 10),
+
+            /// Contact Details
             TextField(
               controller: _contactDetailsController,
-              decoration: InputDecoration(labelText: 'Contact Details'),
+              decoration: _inputDecoration('Contact Details'),
+              style: const TextStyle(color: kDarkBrown),
             ),
+            const SizedBox(height: 10),
+
+            /// Business Hours
             TextField(
               controller: _businessHoursController,
-              decoration: InputDecoration(labelText: 'Business Hours'),
+              decoration: _inputDecoration('Business Hours'),
+              style: const TextStyle(color: kDarkBrown),
             ),
+            const SizedBox(height: 10),
+
+            /// Delivery Options
             TextField(
               controller: _deliveryOptionsController,
-              decoration: InputDecoration(labelText: 'Delivery Options'),
+              decoration: _inputDecoration('Delivery Options'),
+              style: const TextStyle(color: kDarkBrown),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 20),
+
+            /// Store Logo
             _storeLogo != null
                 ? Image.file(_storeLogo!, height: 200)
-                : Text('No store logo selected.'),
+                : const Text('No store logo selected.',
+                    style: TextStyle(color: kDarkBrown)),
+
+            /// Pick Logo Button
             TextButton(
               onPressed: _pickStoreLogo,
-              child: Text('Pick Store Logo'),
+              style: TextButton.styleFrom(
+                foregroundColor: kSoftBrown,
+                textStyle: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              child: const Text('Pick Store Logo'),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
+
+            /// Update Button
             _isLoading
-                ? Center(child: CircularProgressIndicator())
-                : ElevatedButton(
-                    onPressed: _updateStoreInfo,
-                    child: Text('Update Store Information'),
+                ? const Center(child: CircularProgressIndicator())
+                : SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: _updateStoreInfo,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kSoftBrown,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text(
+                        'Update Store Information',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                   ),
           ],
         ),

@@ -1,8 +1,15 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:pie_chart/pie_chart.dart' as pc
+    show PieChart, ChartType, LegendPosition, ChartValuesOptions, LegendOptions;
 import 'package:fl_chart/fl_chart.dart';
-import '../orders/orders_page.dart';
+import 'package:intl/intl.dart';
+
+/// Define color constants to match your Onboard screen
+const kBackgroundColor = Color(0xFFFAF3E0); // Off-white from Onboard
+const kDarkBrown = Color(0xFF5A3D2B);
+const kSoftBrown = Color(0xFF8B5E3C);
 
 class StoreDashboard extends StatefulWidget {
   const StoreDashboard({Key? key}) : super(key: key);
@@ -13,22 +20,37 @@ class StoreDashboard extends StatefulWidget {
 
 class _StoreDashboardState extends State<StoreDashboard> {
   final _firestore = FirebaseFirestore.instance;
+
+  // Seller metrics
   double _totalSales = 0.0;
+  int _totalOrders = 0;
+  double _averageOrderValue = 0.0;
   int _activeListings = 0;
-  List<ProductSales> _popularProducts = [];
-  List<Sales> _salesData = [];
+  double _totalFoodSaved = 0.0;
+
+  // Community metrics
+  double _communityFoodSaved = 0.0;
+  double _communityMoneySaved = 0.0;
+
+  bool _isLoading = true;
+  List<LeaderboardEntry> _topSellers = [];
+
+  // Pie chart data
+  Map<String, double> _productSalesMap = {};
+  Map<String, String> _productNames = {};
+
+  // Bar chart data (# of orders each month)
+  Map<String, int> _ordersByMonth = {};
 
   @override
   void initState() {
     super.initState();
-    _fetchTotalSales();
-    _fetchSalesData();
-    _fetchActiveListings();
-    _fetchPopularProductsData();
+    _fetchDashboardData();
+    _fetchLeaderboard().then((_) => _fetchCommunityImpact());
   }
 
-  /// Fetch Total Sales for this Store
-  Future<void> _fetchTotalSales() async {
+  /// 1) Fetch all orders for this seller
+  Future<void> _fetchDashboardData() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
@@ -37,182 +59,326 @@ class _StoreDashboardState extends State<StoreDashboard> {
             .where('ownerId', isEqualTo: user.uid)
             .get();
 
-        double totalSales = 0.0;
-
-        for (var doc in ordersSnapshot.docs) {
-          final orderData = doc.data();
-          totalSales += (orderData['totalPrice'] as num?)?.toDouble() ?? 0.0;
-        }
-
-        setState(() {
-          _totalSales = totalSales;
-        });
-      }
-    } catch (e) {
-      print("Error fetching total sales: $e");
-    }
-  }
-
-  /// Fetch Active Listings for this Store
-  Future<void> _fetchActiveListings() async {
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
         final productsSnapshot = await _firestore
             .collection('products')
             .where('userId', isEqualTo: user.uid)
             .get();
 
-        setState(() {
-          _activeListings = productsSnapshot.docs.length;
-        });
+        await _calculateStats(ordersSnapshot.docs, productsSnapshot.docs);
       }
     } catch (e) {
-      print("Error fetching active listings: $e");
+      print("⚠️ Error fetching seller data: $e");
     }
   }
 
-  /// Fetch Sales Data for Line Chart
-  Future<void> _fetchSalesData() async {
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        final ordersSnapshot = await _firestore
-            .collection('orders')
-            .where('ownerId', isEqualTo: user.uid)
-            .orderBy('timestamp', descending: false)
-            .get();
+  /// 2) Calculate stats & # of orders per month
+  Future<void> _calculateStats(
+    List<QueryDocumentSnapshot> orders,
+    List<QueryDocumentSnapshot> products,
+  ) async {
+    double totalSales = 0.0;
+    int totalOrders = orders.length;
+    double totalFoodSaved = 0.0;
 
-        Map<DateTime, int> salesMap = {};
-        for (var doc in ordersSnapshot.docs) {
-          final orderData = doc.data();
-          final timestamp = orderData['timestamp'] as Timestamp;
-          final date = DateTime(timestamp.toDate().year,
-              timestamp.toDate().month, timestamp.toDate().day);
+    final productMap = {
+      for (var p in products) p.id: p.data() as Map<String, dynamic>?
+    };
 
-          salesMap[date] = (salesMap[date] ?? 0) + 1;
-        }
+    for (var orderDoc in orders) {
+      final data = orderDoc.data() as Map<String, dynamic>;
+      final orderTotal = (data['totalPrice'] as num?)?.toDouble() ?? 0.0;
+      final productId = data['productId'] as String?;
+      final quantity = (data['quantity'] as num?)?.toInt() ?? 1;
 
-        final salesData = salesMap.entries.map((entry) {
-          return Sales(entry.key, entry.value);
-        }).toList();
+      totalSales += orderTotal;
 
-        setState(() {
-          _salesData = salesData;
-        });
+      // For Pie Chart
+      if (productId != null && productMap.containsKey(productId)) {
+        final productData = productMap[productId]!;
+        final weight = (productData['weight'] as num?)?.toDouble() ?? 0.0;
+        final productName = productData['productName'] ?? 'Unknown Product';
+
+        totalFoodSaved += weight * quantity;
+        _productNames[productId] = productName;
+
+        _productSalesMap[productId] =
+            (_productSalesMap[productId] ?? 0) + orderTotal;
       }
-    } catch (e) {
-      print("Error fetching sales data: $e");
+
+      // For monthly orders bar chart
+      if (data['timestamp'] is Timestamp) {
+        final Timestamp ts = data['timestamp'];
+        final DateTime date = ts.toDate();
+        final String monthKey = DateFormat('yyyy-MM').format(date);
+        _ordersByMonth[monthKey] = (_ordersByMonth[monthKey] ?? 0) + 1;
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _totalSales = totalSales;
+        _totalOrders = totalOrders;
+        _averageOrderValue =
+            (totalOrders > 0) ? (totalSales / totalOrders) : 0.0;
+        _activeListings = products.length;
+        _totalFoodSaved = totalFoodSaved;
+        _isLoading = false;
+      });
     }
   }
 
-  /// Fetch Popular Products Data
-  Future<void> _fetchPopularProductsData() async {
+  /// 3) Community Impact
+  Future<void> _fetchCommunityImpact() async {
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        final ordersSnapshot = await _firestore
-            .collection('orders')
-            .where('ownerId', isEqualTo: user.uid)
-            .get();
+      double totalFoodSaved = 0.0;
+      double totalMoneySaved = 0.0;
 
-        Map<String, int> productsMap = {};
-        for (var doc in ordersSnapshot.docs) {
-          final productId = doc.data()['productId'] as String;
-          productsMap[productId] = (productsMap[productId] ?? 0) + 1;
-        }
+      for (var seller in _topSellers) {
+        totalFoodSaved += seller.totalFoodSaved;
+      }
 
-        final popularProducts = <ProductSales>[];
-        for (var entry in productsMap.entries) {
-          final productDoc =
-              await _firestore.collection('products').doc(entry.key).get();
-          if (productDoc.exists) {
-            final productName = productDoc.data()?['productName'] ?? 'Unknown';
-            popularProducts.add(ProductSales(productName, entry.value));
+      final ordersSnapshot = await _firestore.collection('orders').get();
+      final productsSnapshot = await _firestore.collection('products').get();
+
+      for (var order in ordersSnapshot.docs) {
+        final data = order.data();
+        final productId = data['productId'] as String?;
+        final quantity = (data['quantity'] as num?)?.toInt() ?? 1;
+
+        if (productId != null) {
+          final productDoc = productsSnapshot.docs.firstWhere(
+            (p) => p.id == productId,
+            orElse: () => throw Exception('Product not found'),
+          );
+
+          if (productDoc != null) {
+            final productData = productDoc.data();
+            final originalPrice =
+                (productData['originalPrice'] as num?)?.toDouble() ?? 0.0;
+            final currentPrice =
+                (productData['price'] as num?)?.toDouble() ?? 0.0;
+
+            totalMoneySaved += (originalPrice - currentPrice) * quantity;
           }
         }
+      }
 
-        popularProducts.sort((a, b) => b.sales.compareTo(a.sales));
-
+      if (mounted) {
         setState(() {
-          _popularProducts = popularProducts;
+          _communityFoodSaved = totalFoodSaved;
+          _communityMoneySaved = totalMoneySaved;
         });
       }
     } catch (e) {
-      print("Error fetching popular products data: $e");
+      print("⚠️ Error updating community impact: $e");
     }
   }
 
+  /// 4) Leaderboard
+  Future<void> _fetchLeaderboard() async {
+    try {
+      final sellersSnapshot = await _firestore.collection('sellers').get();
+      final Map<String, LeaderboardEntry> sellerStats = {};
+
+      for (var seller in sellersSnapshot.docs) {
+        final sellerId = seller.id;
+        final storeName = seller.data()['storeName'] ?? "Unknown Store";
+        sellerStats[sellerId] =
+            LeaderboardEntry(storeName: storeName, totalFoodSaved: 0.0);
+      }
+
+      final ordersSnapshot = await _firestore.collection('orders').get();
+      final productsSnapshot = await _firestore.collection('products').get();
+
+      for (var order in ordersSnapshot.docs) {
+        final data = order.data();
+        final ownerId = data['ownerId'] as String?;
+        final productId = data['productId'] as String?;
+        final quantity = (data['quantity'] as num?)?.toInt() ?? 1;
+
+        if (ownerId != null &&
+            productId != null &&
+            sellerStats.containsKey(ownerId)) {
+          final productDoc = productsSnapshot.docs.firstWhere(
+            (p) => p.id == productId,
+            orElse: () => throw Exception('Product not found'),
+          );
+
+          if (productDoc != null) {
+            final productData = productDoc.data();
+            final weight = (productData['weight'] as num?)?.toDouble() ?? 0.0;
+            sellerStats[ownerId]!.totalFoodSaved += weight * quantity;
+          }
+        }
+      }
+
+      // Sort & take top 5
+      List<LeaderboardEntry> topSellers = sellerStats.values.toList();
+      topSellers.sort((a, b) => b.totalFoodSaved.compareTo(a.totalFoodSaved));
+      topSellers = topSellers.take(5).toList();
+
+      if (mounted) {
+        setState(() {
+          _topSellers = topSellers;
+        });
+      }
+    } catch (e) {
+      print("⚠️ Error fetching leaderboard: $e");
+    }
+  }
+
+  /// BUILD
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // 1) Match Onboard's BG color
+      backgroundColor: kBackgroundColor,
+
+      // 2) Soft brown appbar
       appBar: AppBar(
-        title: const Text('Store Dashboard'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.list),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const OrdersPage()),
-              );
-            },
-          ),
+        backgroundColor: kSoftBrown,
+        title: const Text(
+          'Store Dashboard',
+          style: TextStyle(color: Colors.white),
+        ),
+      ),
+
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Stats row
+                  _buildStatsRow(),
+                  const SizedBox(height: 20),
+
+                  // Pie chart of product sales
+                  _buildPieChart(),
+                  const SizedBox(height: 20),
+
+                  // Bar chart: # of orders each month
+                  _buildMonthlyOrdersBarChart(),
+                  const SizedBox(height: 20),
+
+                  // Leaderboard
+                  _buildLeaderboard(),
+                ],
+              ),
+            ),
+    );
+  }
+
+  /// Stats row (horizontal scroll)
+  Widget _buildStatsRow() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          _buildStatCard(
+              "Total Sales", "\$${_totalSales.toStringAsFixed(2)}", Icons.attach_money),
+          _buildStatCard("Total Orders", "$_totalOrders", Icons.shopping_cart),
+          _buildStatCard("Avg Order Value",
+              "\$${_averageOrderValue.toStringAsFixed(2)}", Icons.bar_chart),
+          _buildStatCard("Food Saved", "${_totalFoodSaved.toStringAsFixed(1)} kg", Icons.eco),
+          _buildStatCard("Community Food Saved",
+              "${_communityFoodSaved.toStringAsFixed(1)} kg", Icons.people),
+          _buildStatCard("Community Money Saved",
+              "\$${_communityMoneySaved.toStringAsFixed(2)}", Icons.savings),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+    );
+  }
+
+  Widget _buildStatCard(String title, String value, IconData icon) {
+    return Card(
+      color: Colors.white, // or a subtle brown if you prefer
+      elevation: 3,
+      margin: const EdgeInsets.all(8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Overview',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            Icon(icon, size: 28, color: kDarkBrown),
+            const SizedBox(height: 4),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: kDarkBrown,
+              ),
             ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Expanded(child: _buildSummaryCard('Total Sales', _totalSales)),
-                Expanded(
-                    child: _buildSummaryCard(
-                        'Active Listings', _activeListings.toDouble())),
-              ],
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: kSoftBrown,
+              ),
             ),
-            const SizedBox(height: 24),
-            const Text(
-              'Sales Trends',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            _buildSalesChart(),
-            const SizedBox(height: 24),
-            const Text(
-              'Popular Products',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            _buildPopularProductsChart(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSummaryCard(String title, double value) {
+  /// Pie Chart: product-level sales
+  Widget _buildPieChart() {
+    if (_productSalesMap.isEmpty) {
+      return Card(
+        color: Colors.white,
+        elevation: 3,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Center(
+            child: Text(
+              "No product sales data available.",
+              style: TextStyle(color: kDarkBrown),
+            ),
+          ),
+        ),
+      );
+    }
+
+    final dataMap = <String, double>{};
+    _productSalesMap.forEach((productId, sales) {
+      final productName = _productNames[productId] ?? productId;
+      dataMap[productName] = sales;
+    });
+
     return Card(
+      color: Colors.white,
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            const Text(
+              "Products & Their Sales",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: kDarkBrown,
+              ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              value.toStringAsFixed(2),
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            const SizedBox(height: 16),
+            pc.PieChart(
+              dataMap: dataMap,
+              chartType: pc.ChartType.disc,
+              chartRadius: 200,
+              animationDuration: const Duration(milliseconds: 800),
+              legendOptions: const pc.LegendOptions(
+                showLegends: true,
+                legendPosition: pc.LegendPosition.right,
+              ),
+              chartValuesOptions: const pc.ChartValuesOptions(
+                showChartValuesInPercentage: false,
+                showChartValuesOutside: false,
+              ),
             ),
           ],
         ),
@@ -220,30 +386,127 @@ class _StoreDashboardState extends State<StoreDashboard> {
     );
   }
 
-  Widget _buildSalesChart() {
-    return Container(
-      height: 200,
-      child: LineChart(
-        LineChartData(
-          lineBarsData: [
-            LineChartBarData(
-              spots: _salesData
-                  .map((data) => FlSpot(data.day.millisecondsSinceEpoch
-                      .toDouble(), data.sales.toDouble()))
-                  .toList(),
-              isCurved: true,
-              gradient: const LinearGradient(
-                colors: [Colors.blue, Colors.lightBlueAccent],
+  /// Bar Chart: monthly orders
+  Widget _buildMonthlyOrdersBarChart() {
+    if (_ordersByMonth.isEmpty) {
+      return Card(
+        color: Colors.white,
+        child: const Padding(
+          padding: EdgeInsets.all(16),
+          child: Center(child: Text("No monthly orders data available.")),
+        ),
+      );
+    }
+
+    final sortedKeys = _ordersByMonth.keys.toList()..sort();
+    final barGroups = <BarChartGroupData>[];
+    double maxValue = 0;
+
+    for (int i = 0; i < sortedKeys.length; i++) {
+      final monthKey = sortedKeys[i];
+      final ordersCount = _ordersByMonth[monthKey] ?? 0;
+      if (ordersCount > maxValue) maxValue = ordersCount.toDouble();
+
+      barGroups.add(
+        BarChartGroupData(
+          x: i,
+          barRods: [
+            BarChartRodData(
+              toY: ordersCount.toDouble(),
+              color: kDarkBrown,
+              width: 16,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final suggestedMaxY = (maxValue < 5) ? 5 : maxValue + 1;
+
+    return Card(
+      color: Colors.white,
+      margin: const EdgeInsets.symmetric(vertical: 16),
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            const Text(
+              "Monthly Orders",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: kDarkBrown,
               ),
-              barWidth: 4,
-              isStrokeCapRound: true,
-              belowBarData: BarAreaData(
-                show: true,
-                gradient: LinearGradient(
-                  colors: [
-                    Colors.blue.withOpacity(0.2),
-                    Colors.lightBlueAccent.withOpacity(0.2),
-                  ],
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              "Number of orders placed each month.",
+              style: TextStyle(fontSize: 12, color: kSoftBrown),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 300,
+              child: BarChart(
+                BarChartData(
+                  groupsSpace: 20,
+                  barGroups: barGroups,
+                  minY: 0,
+                  maxY: suggestedMaxY.toDouble(),
+                  titlesData: FlTitlesData(
+                    leftTitles: AxisTitles(
+                      axisNameSize: 14,
+                      axisNameWidget: const Text(
+                        "Orders",
+                        style: TextStyle(fontWeight: FontWeight.bold, color: kDarkBrown),
+                      ),
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        interval: 1,
+                        reservedSize: 40,
+                        // label styling if needed
+                        getTitlesWidget: (value, meta) {
+                          // you can style the numeric labels too
+                          return Text(
+                            value.toInt().toString(),
+                            style: const TextStyle(color: kDarkBrown, fontSize: 10),
+                          );
+                        },
+                      ),
+                    ),
+                    bottomTitles: AxisTitles(
+                      axisNameSize: 14,
+                      axisNameWidget: const Text(
+                        "Month",
+                        style: TextStyle(fontWeight: FontWeight.bold, color: kDarkBrown),
+                      ),
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        getTitlesWidget: (value, meta) {
+                          final index = value.toInt();
+                          if (index < 0 || index >= sortedKeys.length) {
+                            return const SizedBox();
+                          }
+                          final raw = sortedKeys[index]; // e.g. "2025-02"
+                          final monthNum = raw.substring(5); // "02"
+                          final monthInt = int.parse(monthNum);
+                          final shortMonth = DateFormat('MMM')
+                              .format(DateTime(0, monthInt)); // "Feb"
+                          return Text(
+                            shortMonth,
+                            style: const TextStyle(
+                                fontSize: 11, color: kDarkBrown),
+                          );
+                        },
+                      ),
+                    ),
+                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  ),
+                  borderData: FlBorderData(show: true),
+                  gridData: FlGridData(show: true),
                 ),
               ),
             ),
@@ -253,39 +516,42 @@ class _StoreDashboardState extends State<StoreDashboard> {
     );
   }
 
-  Widget _buildPopularProductsChart() {
-    return Container(
-      height: 200,
-      child: BarChart(
-        BarChartData(
-          barGroups: _popularProducts.map((data) {
-            return BarChartGroupData(
-              x: _popularProducts.indexOf(data),
-              barRods: [
-                BarChartRodData(
-                  toY: data.sales.toDouble(),
-                  width: 16,
-                  color: Colors.red,
-                ),
-              ],
+  /// Leaderboard
+  Widget _buildLeaderboard() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "🏆 Top 5 Sellers of the Month",
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: kDarkBrown,
+          ),
+        ),
+        Column(
+          children: _topSellers.map((seller) {
+            return ListTile(
+              leading: const Icon(Icons.store, color: kDarkBrown),
+              title: Text(
+                "Seller Name: ${seller.storeName}",
+                style: const TextStyle(color: kSoftBrown),
+              ),
+              subtitle: Text(
+                "Food Saved: ${seller.totalFoodSaved.toStringAsFixed(1)} kg",
+                style: const TextStyle(color: kDarkBrown),
+              ),
             );
           }).toList(),
         ),
-      ),
+      ],
     );
   }
 }
 
-class Sales {
-  final DateTime day;
-  final int sales;
+class LeaderboardEntry {
+  String storeName;
+  double totalFoodSaved;
 
-  Sales(this.day, this.sales);
-}
-
-class ProductSales {
-  final String product;
-  final int sales;
-
-  ProductSales(this.product, this.sales);
+  LeaderboardEntry({required this.storeName, required this.totalFoodSaved});
 }

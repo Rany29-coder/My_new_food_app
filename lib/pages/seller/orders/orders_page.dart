@@ -4,6 +4,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'order_details_page.dart';
 import 'order_model.dart' as my_new_food_app_order;
 
+/// Same color constants
+const kBackgroundColor = Color(0xFFFAF3E0);
+const kDarkBrown = Color(0xFF5A3D2B);
+const kSoftBrown = Color(0xFF8B5E3C);
+
 class OrdersPage extends StatefulWidget {
   const OrdersPage({Key? key}) : super(key: key);
 
@@ -24,9 +29,18 @@ class _OrdersPageState extends State<OrdersPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      /// 1) Off-white background
+      backgroundColor: kBackgroundColor,
+
+      /// 2) Soft brown app bar with white text
       appBar: AppBar(
-        title: const Text('Orders'),
+        backgroundColor: kSoftBrown,
+        title: const Text(
+          'Orders',
+          style: TextStyle(color: Colors.white),
+        ),
       ),
+
       body: StreamBuilder<QuerySnapshot>(
         stream: _firestore
             .collection('orders')
@@ -45,23 +59,55 @@ class _OrdersPageState extends State<OrdersPage> {
                   .toList() ??
               [];
 
+          if (orders.isEmpty) {
+            return const Center(
+              child: Text(
+                'No orders found.',
+                style: TextStyle(color: kDarkBrown, fontSize: 16),
+              ),
+            );
+          }
+
           return ListView.builder(
             itemCount: orders.length,
             itemBuilder: (context, index) {
               var order = orders[index];
-              return ListTile(
-                title: Text('Order ID: ${order.id}'),
-                subtitle: Text(
-                    'Customer: ${order.buyerId} - Total: \$${order.totalPrice.toStringAsFixed(2)}'),
-                trailing: Text(order.status),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => OrderDetailsPage(order: order),
+              return Card(
+                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                color: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 2,
+                child: ListTile(
+                  title: Text(
+                    'Order ID: ${order.id}',
+                    style: const TextStyle(
+                      color: kDarkBrown,
+                      fontWeight: FontWeight.bold,
                     ),
-                  );
-                },
+                  ),
+                  subtitle: Text(
+                    'Customer: ${order.buyerId}  •  '
+                    'Total: \$${order.totalPrice.toStringAsFixed(2)}',
+                    style: const TextStyle(color: kSoftBrown),
+                  ),
+                  trailing: Text(
+                    order.status,
+                    style: const TextStyle(
+                      color: kDarkBrown,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => OrderDetailsPage(order: order),
+                      ),
+                    );
+                  },
+                ),
               );
             },
           );

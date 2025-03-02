@@ -25,7 +25,7 @@ class _BuyerBottomNavState extends State<BuyerBottomNav> {
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(); // Initialize the PageController here
+    _pageController = PageController();
     homepage = const Home();
     profilepage = const Profile();
     walletpage = const Wallet();
@@ -35,13 +35,14 @@ class _BuyerBottomNavState extends State<BuyerBottomNav> {
 
   @override
   void dispose() {
-    _pageController.dispose(); // Dispose of the PageController
+    _pageController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFFCF5EE), // Light beige background
       body: Column(
         children: [
           Expanded(
@@ -58,17 +59,17 @@ class _BuyerBottomNavState extends State<BuyerBottomNav> {
         ],
       ),
       bottomNavigationBar: CurvedNavigationBar(
-        items: const <Widget>[
-          Icon(Icons.home, size: 30, color: Colors.white),
-          Icon(Icons.account_balance_wallet, size: 30, color: Colors.white),
-          Icon(Icons.shopping_cart, size: 30, color: Colors.white),
-          Icon(Icons.person, size: 30, color: Colors.white),
+        items: <Widget>[
+          _buildNavItem(Icons.home, 0),
+          _buildNavItem(Icons.account_balance_wallet, 1),
+          _buildNavItem(Icons.shopping_cart, 2),
+          _buildNavItem(Icons.person, 3),
         ],
         index: currentTabIndex,
         height: 60.0,
-        color: Colors.black,
-        buttonBackgroundColor: Colors.black,
-        backgroundColor: Colors.white,
+        color: const Color(0xFF6D4C41), // Warm brown navbar
+        buttonBackgroundColor: const Color(0xFFBCAAA4), // Lighter brown when selected
+        backgroundColor: const Color(0xFFFCF5EE), // Beige background
         animationCurve: Curves.easeInOut,
         animationDuration: const Duration(milliseconds: 400),
         onTap: (index) {
@@ -82,6 +83,28 @@ class _BuyerBottomNavState extends State<BuyerBottomNav> {
           });
         },
       ),
+    );
+  }
+
+  Widget _buildNavItem(IconData icon, int index) {
+    bool isSelected = currentTabIndex == index;
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          icon,
+          size: 30,
+          color: isSelected ? Colors.white : const Color(0xFFFCF5EE), // White when selected
+        ),
+        Container(
+          width: 5,
+          height: 5,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isSelected ? Colors.white : Colors.transparent, // Dot only when selected
+          ),
+        ),
+      ],
     );
   }
 }
