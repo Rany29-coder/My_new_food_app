@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_stripe/flutter_stripe.dart'; // Stripe
 import 'package:my_new_food_app/pages/login.dart';
 import 'package:my_new_food_app/pages/onboard.dart';
-import 'package:my_new_food_app/pages/settings.dart'; // Import settings
+import 'package:my_new_food_app/pages/settings.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+
+  // Set your Stripe publishable key
+  Stripe.publishableKey = "pk_test_..." ; // Replace with your key
+  await Stripe.instance.applySettings();
 
   runApp(
     ChangeNotifierProvider(
@@ -28,9 +33,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'My New Food App',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.light(), // Default Light Theme
-      darkTheme: ThemeData.dark(), // Dark Theme
-      themeMode: themeProvider.themeMode, // Controls theme mode dynamically
+      theme: ThemeData.light(),
+      darkTheme: ThemeData.dark(),
+      themeMode: themeProvider.themeMode,
       home: FirebaseAuth.instance.currentUser == null
           ? const Login()
           : const Onboard(),
@@ -43,14 +48,14 @@ class MyApp extends StatelessWidget {
   }
 }
 
-/// 🌙 **Theme Provider for Global Theme Management**
 class ThemeProvider extends ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.light;
 
   ThemeMode get themeMode => _themeMode;
 
   void toggleTheme() {
-    _themeMode = _themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+    _themeMode =
+        _themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
     notifyListeners();
   }
 }

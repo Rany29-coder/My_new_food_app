@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'celebration_page.dart'; // Import the new page
+import 'celebration_page.dart';
 
 class Details extends StatefulWidget {
   final String productId;
@@ -36,13 +36,18 @@ class _DetailsState extends State<Details> {
   bool _isLoading = true;
   List<DocumentSnapshot> _relatedProducts = [];
 
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _zipController = TextEditingController();
+  final TextEditingController _cardController = TextEditingController(text: "1234123412341234");
+  final TextEditingController _expiryController = TextEditingController(text: "12/12");
+  final TextEditingController _cvcController = TextEditingController(text: "121");
+
   @override
   void initState() {
     super.initState();
     _fetchRelatedProducts();
   }
 
-  /// Fetch related products dynamically
   Future<void> _fetchRelatedProducts() async {
     try {
       final relatedSnapshot = await FirebaseFirestore.instance
@@ -62,7 +67,87 @@ class _DetailsState extends State<Details> {
     }
   }
 
-  /// Place Order
+  void _showPaymentBottomSheet() {
+    final totalPrice = (widget.productPrice ?? 0.0) * _quantity;
+    final totalSaved = ((widget.originalPrice ?? 0.0) - (widget.productPrice ?? 0.0)) * _quantity;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+          ),
+          child: Wrap(
+            runSpacing: 16,
+            children: [
+              const Text("Payment Details", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              Text("You're saving: \$${totalSaved.toStringAsFixed(2)}", style: const TextStyle(color: Colors.green)),
+              Text("Total Price: \$${totalPrice.toStringAsFixed(2)}"),
+
+              TextField(
+                controller: _nameController,
+                decoration: const InputDecoration(labelText: "Name on Card", border: OutlineInputBorder()),
+              ),
+
+              TextField(
+                controller: _zipController,
+                decoration: const InputDecoration(labelText: "ZIP Code", border: OutlineInputBorder()),
+              ),
+
+              TextField(
+                controller: _cardController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: "Card Number", border: OutlineInputBorder()),
+              ),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _expiryController,
+                      keyboardType: TextInputType.datetime,
+                      decoration: const InputDecoration(labelText: "MM/YY", border: OutlineInputBorder()),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: _cvcController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(labelText: "CVC", border: OutlineInputBorder()),
+                    ),
+                  ),
+                ],
+              ),
+
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _placeOrder();
+                },
+                icon: const Icon(Icons.lock),
+                label: const Text("Pay Now"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 50),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _placeOrder() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -80,11 +165,6 @@ class _DetailsState extends State<Details> {
 
       await FirebaseFirestore.instance.collection('orders').add(order);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Order placed successfully!')),
-      );
-
-      /// Navigate to celebration page
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -101,9 +181,7 @@ class _DetailsState extends State<Details> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
@@ -117,7 +195,6 @@ class _DetailsState extends State<Details> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            /// Product Image
             Container(
               height: 250,
               width: double.infinity,
@@ -130,13 +207,8 @@ class _DetailsState extends State<Details> {
               ),
             ),
             const SizedBox(height: 12),
-
-            /// Product Name & Price
             Text(widget.productName ?? 'Product Name',
-                style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF5A3D2B))),
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF5A3D2B))),
             const SizedBox(height: 4),
             Row(
               children: [
@@ -148,60 +220,40 @@ class _DetailsState extends State<Details> {
                           color: Colors.grey)),
                 const SizedBox(width: 8),
                 Text('\$${widget.productPrice}',
-                    style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.red)),
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.red)),
               ],
             ),
             const SizedBox(height: 8),
-
-            /// Quantity Counter
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 IconButton(
                   icon: const Icon(Icons.remove, color: Colors.red),
-                  onPressed: () {
-                    setState(() {
-                      if (_quantity > 1) _quantity--;
-                    });
-                  },
+                  onPressed: () => setState(() => _quantity = _quantity > 1 ? _quantity - 1 : 1),
                 ),
                 Text('$_quantity', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                 IconButton(
                   icon: const Icon(Icons.add, color: Colors.green),
-                  onPressed: () {
-                    setState(() {
-                      _quantity++;
-                    });
-                  },
+                  onPressed: () => setState(() => _quantity++),
                 ),
               ],
             ),
             const SizedBox(height: 12),
-
-            /// Sustainability Impact
             Text(
               'Buying this product saves ${(widget.weight! * _quantity).toStringAsFixed(2)} kg of food!',
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
-
-            /// CTA Button (Add to Cart)
             ElevatedButton(
+              onPressed: _showPaymentBottomSheet,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF8B5E3C),
                 foregroundColor: Colors.white,
               ),
-              onPressed: _placeOrder,
-              child: const Text('Add to Cart'),
+              child: const Text('Buy Now'),
             ),
             const SizedBox(height: 16),
-
-            /// Related Products Section
-            const Text('Related Products',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text('Related Products', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             _buildRelatedProducts(),
           ],
@@ -210,7 +262,6 @@ class _DetailsState extends State<Details> {
     );
   }
 
-  /// Builds Related Products Grid using the same format as Home Page
   Widget _buildRelatedProducts() {
     return _relatedProducts.isEmpty
         ? const Text('No related products available.')
@@ -218,7 +269,7 @@ class _DetailsState extends State<Details> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2, // Matches the Home Page layout
+              crossAxisCount: 2,
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
               childAspectRatio: 0.75,
@@ -246,20 +297,14 @@ class _DetailsState extends State<Details> {
                     ),
                   );
                 },
-                child: _buildProductCard(product),
+                child: Column(
+                  children: [
+                    Image.network(product['imageUrl'], height: 80, fit: BoxFit.cover),
+                    Text(product['productName']),
+                  ],
+                ),
               );
             },
           );
-  }
-
-  Widget _buildProductCard(Map<String, dynamic> product) {
-    return Card(
-      child: Column(
-        children: [
-          Image.network(product['imageUrl'], height: 80, fit: BoxFit.cover),
-          Text(product['productName']),
-        ],
-      ),
-    );
   }
 }
