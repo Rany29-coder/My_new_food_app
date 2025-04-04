@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:my_new_food_app/pages/buyer/BuyerBottomNav.dart'; // Import the main navigation bar page
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:my_new_food_app/pages/buyer/BuyerBottomNav.dart';
 
 class CelebrationPage extends StatelessWidget {
   final String productName;
@@ -16,44 +17,46 @@ class CelebrationPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final locale = AppLocalizations.of(context)!;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF3E0), // Light beige theme
+      backgroundColor: const Color(0xFFFAF3E0),
       body: Stack(
         alignment: Alignment.center,
         children: [
-          /// 🎊 Mascot Image (Appears Behind Confetti)
+          // 🎊 Mascot
           Positioned(
             top: 100,
             child: Image.asset(
               'images/mascot_celebration.jpg',
-              height: 250, // Increased size
-              width: 250, // Ensure it's visible
+              height: 250,
+              width: 250,
               fit: BoxFit.cover,
             ),
           ),
 
-          /// 🎉 Confetti Animation (Appears Over Image)
+          // 🎉 Confetti
           Positioned(
-            top: 80, // Adjusted to match image position
+            top: 80,
             child: Lottie.asset(
               'images/confetti.json',
-              height: 300, // Covers a large area
-              repeat: false, // Play once
+              height: 300,
+              repeat: false,
             ),
           ),
 
-          /// 🎇 Celebration Content
+          // 🎇 Main Content
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 50.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 300), // To make space for confetti & image
+                const SizedBox(height: 300),
 
-                /// 🎉 Title
-                const Text(
-                  "Congratulations! 🎉",
-                  style: TextStyle(
+                // 🎉 Title
+                Text(
+                  locale.celebrationTitle,
+                  style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF8B5E3C),
@@ -63,9 +66,12 @@ class CelebrationPage extends StatelessWidget {
 
                 const SizedBox(height: 10),
 
-                /// 🌱 Impact Statement
+                // 🌱 Impact Statement
                 Text(
-                  "You just saved \$$totalSaved and prevented ${foodSaved.toStringAsFixed(2)} kg of food from being wasted! 🌍💚",
+                  locale.celebrationImpact(
+                    totalSaved.toStringAsFixed(2),
+                    foodSaved.toStringAsFixed(2),
+                  ),
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -76,9 +82,9 @@ class CelebrationPage extends StatelessWidget {
 
                 const SizedBox(height: 20),
 
-                /// 🌟 Motivation Text
+                // 🌟 Motivation
                 Text(
-                  "Every small action makes a big difference. Keep shopping and making an impact!",
+                  locale.celebrationMotivation,
                   style: TextStyle(
                     fontSize: 16,
                     color: Colors.brown[700],
@@ -89,7 +95,7 @@ class CelebrationPage extends StatelessWidget {
 
                 const SizedBox(height: 40),
 
-                /// 🛒 **Go Back to Home with Navbar**
+                // 🛒 Button
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF8B5E3C),
@@ -102,17 +108,15 @@ class CelebrationPage extends StatelessWidget {
                   onPressed: () {
                     Navigator.pushAndRemoveUntil(
                       context,
-                      MaterialPageRoute(builder: (context) => const BuyerBottomNav()), // Ensures navbar is present
-                      (route) => false, // Clears all previous routes
+                      MaterialPageRoute(builder: (_) => const BuyerBottomNav()),
+                      (route) => false,
                     );
                   },
-                  child: const Text(
-                    "Continue Shopping 🛍️",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  child: Text(
+                    locale.continueShopping,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
-
-                const SizedBox(height: 20),
               ],
             ),
           ),

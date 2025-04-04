@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:my_new_food_app/pages/buyer/order.dart' as myOrder;
 import 'package:my_new_food_app/pages/settings.dart';
 
@@ -45,23 +46,26 @@ class _ProfileState extends State<Profile> {
   }
 
   Future<void> _logout() async {
+    final locale = AppLocalizations.of(context)!;
     try {
       await _auth.signOut();
       Navigator.of(context)
           .pushNamedAndRemoveUntil('/login', (route) => false);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error logging out: $e')),
+        SnackBar(content: Text("${locale.logoutError}: $e")),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final locale = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: const Color(0xFFFAF3E0),
       appBar: AppBar(
-        title: const Text('Profile'),
+        title: Text(locale.profile),
         backgroundColor: const Color(0xFF8B5E3C),
         actions: [
           IconButton(
@@ -74,7 +78,6 @@ class _ProfileState extends State<Profile> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            /// Profile Picture & Name
             Center(
               child: Column(
                 children: [
@@ -85,20 +88,20 @@ class _ProfileState extends State<Profile> {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    userName ?? "Loading...",
+                    userName ?? locale.loading,
                     style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF5A3D2B)),
                   ),
                   Text(
-                    userEmail ?? "No Email",
+                    userEmail ?? locale.noEmail,
                     style: const TextStyle(fontSize: 16, color: Colors.grey),
                   ),
                   const SizedBox(height: 10),
                   ElevatedButton.icon(
                     icon: const Icon(Icons.edit, size: 18),
-                    label: const Text("Edit Profile"),
+                    label: Text(locale.editProfile),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF8B5E3C),
                       foregroundColor: Colors.white,
@@ -127,9 +130,9 @@ class _ProfileState extends State<Profile> {
               ),
               child: Column(
                 children: [
-                  const Text(
-                    "Wallet Balance",
-                    style: TextStyle(
+                  Text(
+                    locale.walletBalance,
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF5A3D2B),
@@ -149,10 +152,9 @@ class _ProfileState extends State<Profile> {
             ),
             const SizedBox(height: 20),
 
-            /// Account Options
             ListTile(
               leading: const Icon(Icons.shopping_bag, color: Colors.brown),
-              title: const Text("My Orders"),
+              title: Text(locale.myOrders),
               trailing: const Icon(Icons.arrow_forward_ios),
               onTap: () {
                 Navigator.push(
@@ -163,7 +165,7 @@ class _ProfileState extends State<Profile> {
             ),
             ListTile(
               leading: const Icon(Icons.settings, color: Colors.grey),
-              title: const Text("Settings"),
+              title: Text(locale.settings),
               trailing: const Icon(Icons.arrow_forward_ios),
               onTap: () {
                 Navigator.push(
@@ -174,26 +176,26 @@ class _ProfileState extends State<Profile> {
             ),
             ListTile(
               leading: const Icon(Icons.star, color: Colors.amber),
-              title: const Text("Rate Us"),
+              title: Text(locale.rateUs),
               trailing: const Icon(Icons.arrow_forward_ios),
               onTap: () {
-                // Navigate to App Store / Play Store Rating
+                // Handle rating
               },
             ),
             const SizedBox(height: 30),
 
-            /// Logout Button
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 40),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 15, horizontal: 40),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
               icon: const Icon(Icons.logout),
-              label: const Text("Logout"),
+              label: Text(locale.logout),
               onPressed: _logout,
             ),
           ],

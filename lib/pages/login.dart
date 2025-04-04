@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:my_new_food_app/pages/buyer/BuyerBottomNav.dart';
 import 'package:my_new_food_app/pages/seller/SellerBottomNav.dart';
 import 'package:my_new_food_app/pages/signup.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -20,10 +21,7 @@ class _LoginState extends State<Login> {
   bool _isLoading = false;
 
   void _login() async {
-    setState(() {
-      _isLoading = true;
-    });
-
+    setState(() => _isLoading = true);
     try {
       final user = await _auth.signInWithEmailAndPassword(
         email: _emailController.text,
@@ -38,16 +36,12 @@ class _LoginState extends State<Login> {
         if (userType == 'Buyer') {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(
-              builder: (context) => BuyerBottomNav(),
-            ),
+            MaterialPageRoute(builder: (context) => BuyerBottomNav()),
           );
         } else if (userType == 'Seller') {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(
-              builder: (context) => SellerBottomNav(),
-            ),
+            MaterialPageRoute(builder: (context) => SellerBottomNav()),
           );
         }
       }
@@ -56,30 +50,26 @@ class _LoginState extends State<Login> {
         SnackBar(content: Text(e.toString())),
       );
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final local = AppLocalizations.of(context)!;
+
     return Scaffold(
-      backgroundColor: Color(0xFFF3D5BA), // Desert Sand background
+      backgroundColor: const Color(0xFFF3D5BA),
       body: Center(
         child: SingleChildScrollView(
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-            margin: EdgeInsets.symmetric(horizontal: 20),
+            margin: const EdgeInsets.symmetric(horizontal: 20),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 8,
-                  offset: Offset(0, 4),
-                ),
+              boxShadow: const [
+                BoxShadow(color: Colors.black26, blurRadius: 8, offset: Offset(0, 4)),
               ],
             ),
             child: Column(
@@ -87,63 +77,54 @@ class _LoginState extends State<Login> {
               children: [
                 Text(
                   'Baraka',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF71452E), // Coffee color
-                  ),
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF71452E)),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 Text(
-                  'Welcome back! Sign in to continue your food-saving journey.',
+                  local.welcomeBack,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Color(0xFF38333C), // Jet color
-                  ),
+                  style: const TextStyle(fontSize: 16, color: Color(0xFF38333C)),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: Text('EMAIL',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, color: Colors.black)),
+                  child: Text(local.emailLabel,
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
                 ),
-                SizedBox(height: 5),
+                const SizedBox(height: 5),
                 TextField(
                   controller: _emailController,
                   decoration: InputDecoration(
-                    hintText: 'example@gmail.com',
+                    hintText: local.emailHint,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: Color(0xFF984A2B)),
+                      borderSide: const BorderSide(color: Color(0xFF984A2B)),
                     ),
                     filled: true,
                     fillColor: Colors.white,
                   ),
                 ),
-                SizedBox(height: 15),
+                const SizedBox(height: 15),
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: Text('PASSWORD',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, color: Colors.black)),
+                  child: Text(local.passwordLabel,
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
                 ),
-                SizedBox(height: 5),
+                const SizedBox(height: 5),
                 TextField(
                   controller: _passwordController,
                   obscureText: true,
                   decoration: InputDecoration(
-                    hintText: '********',
+                    hintText: local.passwordHint,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: Color(0xFF984A2B)),
+                      borderSide: const BorderSide(color: Color(0xFF984A2B)),
                     ),
                     filled: true,
                     fillColor: Colors.white,
                   ),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -151,52 +132,42 @@ class _LoginState extends State<Login> {
                       children: [
                         Checkbox(
                           value: _rememberMe,
-                          activeColor: Color(0xFF71452E),
-                          onChanged: (value) {
-                            setState(() {
-                              _rememberMe = value!;
-                            });
-                          },
+                          activeColor: const Color(0xFF71452E),
+                          onChanged: (value) => setState(() => _rememberMe = value!),
                         ),
-                        Text('Remember me'),
+                        Text(local.rememberMe),
                       ],
                     ),
                     TextButton(
                       onPressed: () {},
-                      child: Text('Forgot Password',
-                          style: TextStyle(color: Color(0xFF984A2B))),
+                      child: Text(local.forgotPassword,
+                          style: const TextStyle(color: Color(0xFF984A2B))),
                     ),
                   ],
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: _login,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF984A2B),
+                    backgroundColor: const Color(0xFF984A2B),
                     foregroundColor: Colors.white,
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 100, vertical: 15),
-                    textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 100, vertical: 15),
+                    textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
                   child: _isLoading
-                      ? CircularProgressIndicator(color: Colors.white)
-                      : Text('LOG IN'),
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : Text(local.logIn),
                 ),
-                SizedBox(height: 20),
-                Text("Don't have an account?"),
+                const SizedBox(height: 20),
+                Text(local.noAccount),
                 TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => SignUp()),
-                    );
-                  },
-                  child: Text('SIGN UP',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, color: Color(0xFF71452E))),
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SignUp()),
+                  ),
+                  child: Text(local.signUp,
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF71452E))),
                 ),
               ],
             ),

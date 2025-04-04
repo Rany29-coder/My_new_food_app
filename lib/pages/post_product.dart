@@ -3,6 +3,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class PostProduct extends StatefulWidget {
   @override
@@ -59,11 +60,11 @@ class _PostProductState extends State<PostProduct> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Product posted successfully')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.postSuccess)),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to post product: $e')),
+        SnackBar(content: Text('${AppLocalizations.of(context)!.postFail} $e')),
       );
     } finally {
       setState(() {
@@ -74,9 +75,11 @@ class _PostProductState extends State<PostProduct> {
 
   @override
   Widget build(BuildContext context) {
+    final tr = AppLocalizations.of(context)!;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Post a Product'),
+        title: Text(tr.postProduct),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -84,34 +87,34 @@ class _PostProductState extends State<PostProduct> {
           children: [
             TextField(
               controller: _productNameController,
-              decoration: InputDecoration(labelText: 'Product Name'),
+              decoration: InputDecoration(labelText: tr.productName),
             ),
             TextField(
               controller: _priceController,
-              decoration: InputDecoration(labelText: 'Original Price'),
+              decoration: InputDecoration(labelText: tr.originalPrice),
             ),
             TextField(
               controller: _expiryDateController,
-              decoration: InputDecoration(labelText: 'Expiry Date'),
+              decoration: InputDecoration(labelText: tr.expiryDate),
             ),
             TextField(
               controller: _detailsController,
-              decoration: InputDecoration(labelText: 'Product Details'),
+              decoration: InputDecoration(labelText: tr.productDetails),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             _image == null
-                ? Text('No image selected.')
+                ? Text(tr.noImage)
                 : Image.file(_image!, height: 200),
             ElevatedButton(
               onPressed: _pickImage,
-              child: Text('Upload Image'),
+              child: Text(tr.uploadImage),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             _isLoading
-                ? CircularProgressIndicator()
+                ? const CircularProgressIndicator()
                 : ElevatedButton(
                     onPressed: _postProduct,
-                    child: Text(_isPosted ? 'Product Posted Successfully' : 'Post Product'),
+                    child: Text(_isPosted ? tr.postSuccess : tr.postProduct),
                   ),
           ],
         ),

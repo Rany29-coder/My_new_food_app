@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class Wallet extends StatefulWidget {
   const Wallet({super.key});
@@ -28,7 +29,6 @@ class _WalletState extends State<Wallet> {
     _fetchCommunityImpact();
   }
 
-  /// Fetches individual user's impact
   Future<void> _fetchContributions() async {
     try {
       final user = _auth.currentUser;
@@ -46,15 +46,12 @@ class _WalletState extends State<Wallet> {
           final productId = orderData['productId'];
           final quantity = orderData['quantity'] ?? 1;
 
-          final productDoc =
-              await _firestore.collection('products').doc(productId).get();
+          final productDoc = await _firestore.collection('products').doc(productId).get();
           final productData = productDoc.data();
 
           if (productData != null) {
-            final originalPrice =
-                (productData['originalPrice'] as num?)?.toDouble() ?? 0.0;
-            final productPrice =
-                (productData['price'] as num?)?.toDouble() ?? 0.0;
+            final originalPrice = (productData['originalPrice'] as num?)?.toDouble() ?? 0.0;
+            final productPrice = (productData['price'] as num?)?.toDouble() ?? 0.0;
             final weight = (productData['weight'] as num?)?.toDouble() ?? 0.0;
 
             totalSavings += (originalPrice - productPrice) * quantity;
@@ -69,16 +66,13 @@ class _WalletState extends State<Wallet> {
         });
       }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to fetch contributions: $e')),
+        SnackBar(content: Text('${AppLocalizations.of(context)!.fetchUserDataError}: $e')),
       );
     }
   }
 
-  /// Fetches community-wide impact
   Future<void> _fetchCommunityImpact() async {
     try {
       final ordersSnapshot = await _firestore.collection('orders').get();
@@ -91,8 +85,7 @@ class _WalletState extends State<Wallet> {
       for (var productDoc in productsSnapshot.docs) {
         final productData = productDoc.data();
         final weight = (productData['weight'] as num?)?.toDouble() ?? 0.0;
-        final originalPrice =
-            (productData['originalPrice'] as num?)?.toDouble() ?? 0.0;
+        final originalPrice = (productData['originalPrice'] as num?)?.toDouble() ?? 0.0;
         final productPrice = (productData['price'] as num?)?.toDouble() ?? 0.0;
 
         final ordersForProduct = ordersSnapshot.docs
@@ -110,28 +103,32 @@ class _WalletState extends State<Wallet> {
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to fetch community data: $e')),
+        SnackBar(content: Text('${AppLocalizations.of(context)!.fetchCommunityDataError}: $e')),
       );
     }
   }
 
-  /// Opens the native share sheet
   void _shareImpact() {
-    String message =
-        "🌟 I've saved \$${_totalSavings.toStringAsFixed(2)} and prevented ${_totalWeight.toStringAsFixed(2)}kg of food from going to waste using Baraka! 🍽️\n\n"
-        "Together, our community has saved $_communityFoodSaved kg of food and \$${_communityMoneySaved.toStringAsFixed(2)}! 🥗💚\n"
-        "Join me in making an impact! Download Baraka now. 📲✨";
+    final locale = AppLocalizations.of(context)!;
+    String message = locale.shareMessage(
+      _totalSavings.toStringAsFixed(2),
+      _totalWeight.toStringAsFixed(2),
+      _communityFoodSaved.toStringAsFixed(2),
+      _communityMoneySaved.toStringAsFixed(2),
+    );
 
     Share.share(message);
   }
 
   @override
   Widget build(BuildContext context) {
+    final locale = AppLocalizations.of(context)!;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF3E0), // Background color
+      backgroundColor: const Color(0xFFFAF3E0),
       appBar: AppBar(
-        title: const Text('Your Contributions'),
-        backgroundColor: const Color(0xFF8B5E3C), // Brown header
+        title: Text(locale.yourContributions),
+        backgroundColor: const Color(0xFF8B5E3C),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -140,12 +137,11 @@ class _WalletState extends State<Wallet> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  /// Title
-                  const Align(
+                  Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      'Your Impact So Far',
-                      style: TextStyle(
+                      locale.yourImpactTitle,
+                      style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF5A3D2B),
@@ -154,16 +150,14 @@ class _WalletState extends State<Wallet> {
                   ),
                   const SizedBox(height: 12),
 
-                  /// Mascot Image (Now Full Size)
                   Center(
                     child: Image.asset(
-                      'images/impact.png', // Placeholder
-                      height: 180, // Bigger image
+                      'images/impact.png',
+                      height: 180,
                     ),
                   ),
                   const SizedBox(height: 20),
 
-                  /// Personal Impact (Money + Food Saved)
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -174,7 +168,7 @@ class _WalletState extends State<Wallet> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text(
-                          'Money Saved: \$${_totalSavings.toStringAsFixed(2)}',
+                          '${locale.moneySaved}: \$${_totalSavings.toStringAsFixed(2)}',
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -183,7 +177,7 @@ class _WalletState extends State<Wallet> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'Food Saved: ${_totalWeight.toStringAsFixed(2)} kg',
+                          locale.foodSaved(_totalWeight.toStringAsFixed(2)),
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -195,7 +189,6 @@ class _WalletState extends State<Wallet> {
                   ),
                   const SizedBox(height: 20),
 
-                  /// Community Stats (Meals + Food Saved + Money Saved)
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -205,7 +198,7 @@ class _WalletState extends State<Wallet> {
                     child: Column(
                       children: [
                         Text(
-                          'Meals Saved: $_totalOrders meals',
+                          '${locale.mealsSaved}: $_totalOrders',
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -214,7 +207,7 @@ class _WalletState extends State<Wallet> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'Total Food Saved in the Community: $_communityFoodSaved kg',
+                          '${locale.communityFoodSaved}: ${_communityFoodSaved.toStringAsFixed(1)} kg',
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -223,7 +216,7 @@ class _WalletState extends State<Wallet> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'Total Money Saved in the Community: \$${_communityMoneySaved.toStringAsFixed(2)}',
+                          '${locale.communityMoneySaved}: \$${_communityMoneySaved.toStringAsFixed(2)}',
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -235,14 +228,13 @@ class _WalletState extends State<Wallet> {
                   ),
                   const SizedBox(height: 20),
 
-                  /// Share Button
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF8B5E3C),
                       foregroundColor: Colors.white,
                     ),
                     onPressed: _shareImpact,
-                    child: const Text("Share Your Impact"),
+                    child: Text(locale.shareImpactButton),
                   ),
                 ],
               ),

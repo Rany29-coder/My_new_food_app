@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart'; // Localization import
 import 'package:my_new_food_app/pages/seller/dashboard/store_dashboard.dart';
 
 class RegisterStore extends StatelessWidget {
@@ -6,9 +7,11 @@ class RegisterStore extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final locale = AppLocalizations.of(context)!;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Register Store'),
+        title: Text(locale.registerStore), // Localized title
       ),
       body: Center(
         child: Column(
@@ -22,7 +25,7 @@ class RegisterStore extends StatelessWidget {
                   MaterialPageRoute(builder: (context) => StoreDashboard()),
                 );
               },
-              child: Text('Complete Registration'),
+              child: Text(locale.completeRegistration), // Localized button text
             ),
           ],
         ),

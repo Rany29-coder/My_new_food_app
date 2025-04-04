@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class Order extends StatefulWidget {
   const Order({super.key});
@@ -14,7 +15,7 @@ class _OrderState extends State<Order> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   String? userId;
-  List<DocumentSnapshot> _orders = []; // Stores previous order data to prevent flickering
+  List<DocumentSnapshot> _orders = [];
 
   @override
   void initState() {
@@ -30,21 +31,23 @@ class _OrderState extends State<Order> {
 
   @override
   Widget build(BuildContext context) {
+    final locale = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: const Color(0xFFFCF5EE),
       appBar: AppBar(
         backgroundColor: const Color(0xFF8B5E3C),
-        title: const Text(
-          'My Orders',
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+        title: Text(
+          locale.myOrders,
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
       body: userId == null
-          ? const Center(
+          ? Center(
               child: Text(
-                'User not logged in.',
-                style: TextStyle(fontSize: 18, color: Colors.brown),
+                locale.userNotLoggedIn,
+                style: const TextStyle(fontSize: 18, color: Colors.brown),
               ),
             )
           : StreamBuilder<QuerySnapshot>(
@@ -58,16 +61,15 @@ class _OrderState extends State<Order> {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                // **Fix: Ensure orders list persists even when snapshot is temporarily empty**
                 if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
                   _orders = snapshot.data!.docs;
                 }
 
                 if (_orders.isEmpty) {
-                  return const Center(
+                  return Center(
                     child: Text(
-                      'No orders found.',
-                      style: TextStyle(fontSize: 18, color: Colors.brown),
+                      locale.noOrdersFound,
+                      style: const TextStyle(fontSize: 18, color: Colors.brown),
                     ),
                   );
                 }
@@ -81,7 +83,7 @@ class _OrderState extends State<Order> {
 
                     if (orderData == null) return const SizedBox();
 
-                    final productName = orderData['productName'] ?? 'Unknown Product';
+                    final productName = orderData['productName'] ?? locale.unknownProduct;
                     final quantity = orderData['quantity'] ?? 0;
                     final totalPrice = (orderData['totalPrice'] as num?)?.toDouble() ?? 0.0;
                     final status = orderData['status'] ?? 'Pending';
@@ -106,7 +108,6 @@ class _OrderState extends State<Order> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          /// **Product Name**
                           Text(
                             productName,
                             style: const TextStyle(
@@ -117,33 +118,33 @@ class _OrderState extends State<Order> {
                           ),
                           const SizedBox(height: 6),
 
-                          /// **Quantity & Price**
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                "Quantity: $quantity",
+                                "${locale.quantity}: $quantity",
                                 style: const TextStyle(fontSize: 16, color: Colors.brown),
                               ),
                               Text(
-                                "Total: \$${totalPrice.toStringAsFixed(2)}",
+                                "${locale.total}: \$${totalPrice.toStringAsFixed(2)}",
                                 style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF8B5E3C)),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF8B5E3C),
+                                ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 6),
 
-                          /// **Date Formatting**
                           if (timestamp != null)
                             Text(
-                              "Date: ${DateFormat('MMM dd, yyyy - hh:mm a').format(timestamp)}",
+                              "${locale.date}: ${DateFormat('MMM dd, yyyy - hh:mm a').format(timestamp)}",
                               style: const TextStyle(fontSize: 14, color: Colors.grey),
                             ),
 
-                          /// **Status with Icon**
+                          const SizedBox(height: 6),
+
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -152,7 +153,7 @@ class _OrderState extends State<Order> {
                                   _getStatusIcon(status),
                                   const SizedBox(width: 6),
                                   Text(
-                                    "Status: $status",
+                                    "${locale.status}: ${_getLocalizedStatus(status, locale)}",
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
@@ -173,7 +174,6 @@ class _OrderState extends State<Order> {
     );
   }
 
-  /// **Get Icon for Order Status**
   Widget _getStatusIcon(String status) {
     switch (status) {
       case 'Completed':
@@ -185,7 +185,6 @@ class _OrderState extends State<Order> {
     }
   }
 
-  /// **Get Color for Order Status**
   Color _getStatusColor(String status) {
     switch (status) {
       case 'Completed':
@@ -194,6 +193,17 @@ class _OrderState extends State<Order> {
         return Colors.red;
       default:
         return Colors.orange;
+    }
+  }
+
+  String _getLocalizedStatus(String status, AppLocalizations locale) {
+    switch (status) {
+      case 'Completed':
+        return locale.statusCompleted;
+      case 'Cancelled':
+        return locale.statusCancelled;
+      default:
+        return locale.statusPending;
     }
   }
 }

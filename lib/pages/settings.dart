@@ -3,7 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:provider/provider.dart';
-import 'package:my_new_food_app/main.dart'; // Import ThemeProvider
+import 'package:my_new_food_app/main.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({Key? key}) : super(key: key);
@@ -16,18 +17,21 @@ class _SettingsPageState extends State<SettingsPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   void _inviteFriends() {
-    String message =
-        "🌱 Join me in making a difference! I'm using this app to save food & help the community. Download it now! 📲💚";
-    
+    final locale = AppLocalizations.of(context)!;
+
+    String message = locale.inviteMessage;
+
     Clipboard.setData(ClipboardData(text: message));
     Share.share(message);
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Invitation copied! Share it now 🎉")),
+      SnackBar(content: Text(locale.inviteCopied)),
     );
   }
 
   void _showChangePasswordDialog() {
+    final locale = AppLocalizations.of(context)!;
+
     TextEditingController emailController = TextEditingController();
     TextEditingController oldPasswordController = TextEditingController();
     TextEditingController newPasswordController = TextEditingController();
@@ -36,22 +40,22 @@ class _SettingsPageState extends State<SettingsPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text("Change Password"),
+          title: Text(locale.changePassword),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: emailController,
-                decoration: const InputDecoration(labelText: "Email"),
+                decoration: InputDecoration(labelText: locale.email),
               ),
               TextField(
                 controller: oldPasswordController,
-                decoration: const InputDecoration(labelText: "Old Password"),
+                decoration: InputDecoration(labelText: locale.oldPassword),
                 obscureText: true,
               ),
               TextField(
                 controller: newPasswordController,
-                decoration: const InputDecoration(labelText: "New Password"),
+                decoration: InputDecoration(labelText: locale.newPassword),
                 obscureText: true,
               ),
             ],
@@ -59,7 +63,7 @@ class _SettingsPageState extends State<SettingsPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
+              child: Text(locale.cancel),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -75,18 +79,17 @@ class _SettingsPageState extends State<SettingsPage> {
                   );
 
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text("Password changed successfully!")),
+                    SnackBar(content: Text(locale.passwordChanged)),
                   );
 
                   Navigator.pop(context);
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Error: $e")),
+                    SnackBar(content: Text("${locale.error}: $e")),
                   );
                 }
               },
-              child: const Text("Update"),
+              child: Text(locale.update),
             ),
           ],
         );
@@ -95,12 +98,13 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _logout() async {
+    final locale = AppLocalizations.of(context)!;
     try {
       await _auth.signOut();
       Navigator.of(context).pushReplacementNamed('/login');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error logging out: $e')),
+        SnackBar(content: Text("${locale.logoutError}: $e")),
       );
     }
   }
@@ -108,10 +112,11 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final locale = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: Text(locale.settings),
         backgroundColor: const Color(0xFF8B5E3C),
       ),
       body: ListView(
@@ -119,18 +124,19 @@ class _SettingsPageState extends State<SettingsPage> {
         children: [
           /// 🌙 Dark Mode Toggle
           SwitchListTile(
-            title: const Text("Dark Mode"),
+            title: Text(locale.darkMode),
             subtitle: Text(
-                themeProvider.themeMode == ThemeMode.dark
-                    ? "Dark mode is enabled"
-                    : "Light mode is enabled"),
-            secondary: Icon(themeProvider.themeMode == ThemeMode.dark
-                ? Icons.dark_mode
-                : Icons.light_mode),
+              themeProvider.themeMode == ThemeMode.dark
+                  ? locale.darkModeEnabled
+                  : locale.lightModeEnabled,
+            ),
+            secondary: Icon(
+              themeProvider.themeMode == ThemeMode.dark
+                  ? Icons.dark_mode
+                  : Icons.light_mode,
+            ),
             value: themeProvider.themeMode == ThemeMode.dark,
-            onChanged: (value) {
-              themeProvider.toggleTheme();
-            },
+            onChanged: (value) => themeProvider.toggleTheme(),
           ),
 
           const Divider(),
@@ -138,8 +144,8 @@ class _SettingsPageState extends State<SettingsPage> {
           /// 🔗 Invite Friends
           ListTile(
             leading: const Icon(Icons.share, color: Colors.blue),
-            title: const Text("Invite Friends"),
-            subtitle: const Text("Spread the word and invite others!"),
+            title: Text(locale.inviteFriends),
+            subtitle: Text(locale.inviteSubtitle),
             onTap: _inviteFriends,
           ),
 
@@ -148,8 +154,8 @@ class _SettingsPageState extends State<SettingsPage> {
           /// 🔒 Change Password
           ListTile(
             leading: const Icon(Icons.lock, color: Colors.orange),
-            title: const Text("Change Password"),
-            subtitle: const Text("Update your password for security"),
+            title: Text(locale.changePassword),
+            subtitle: Text(locale.changePasswordSubtitle),
             onTap: _showChangePasswordDialog,
           ),
 
@@ -158,8 +164,8 @@ class _SettingsPageState extends State<SettingsPage> {
           /// 🚪 Logout Button
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text("Logout", style: TextStyle(color: Colors.red)),
-            subtitle: const Text("Sign out of your account"),
+            title: Text(locale.logout, style: const TextStyle(color: Colors.red)),
+            subtitle: Text(locale.logoutSubtitle),
             onTap: _logout,
           ),
         ],

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'celebration_page.dart';
 
 class Details extends StatefulWidget {
@@ -62,12 +63,13 @@ class _DetailsState extends State<Details> {
     } catch (e) {
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching related products: $e')),
+        SnackBar(content: Text('Error fetching related products: \$e')),
       );
     }
   }
 
   void _showPaymentBottomSheet() {
+    final locale = AppLocalizations.of(context)!;
     final totalPrice = (widget.productPrice ?? 0.0) * _quantity;
     final totalSaved = ((widget.originalPrice ?? 0.0) - (widget.productPrice ?? 0.0)) * _quantity;
 
@@ -88,33 +90,29 @@ class _DetailsState extends State<Details> {
           child: Wrap(
             runSpacing: 16,
             children: [
-              const Text("Payment Details", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              Text("You're saving: \$${totalSaved.toStringAsFixed(2)}", style: const TextStyle(color: Colors.green)),
-              Text("Total Price: \$${totalPrice.toStringAsFixed(2)}"),
-
+              Text(locale.paymentDetails, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              Text(locale.youAreSaving(totalSaved.toStringAsFixed(2)), style: const TextStyle(color: Colors.green)),
+              Text(locale.totalPrice(totalPrice.toStringAsFixed(2))),
               TextField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: "Name on Card", border: OutlineInputBorder()),
+                decoration: InputDecoration(labelText: locale.nameOnCard, border: const OutlineInputBorder()),
               ),
-
               TextField(
                 controller: _zipController,
-                decoration: const InputDecoration(labelText: "ZIP Code", border: OutlineInputBorder()),
+                decoration: InputDecoration(labelText: locale.zipCode, border: const OutlineInputBorder()),
               ),
-
               TextField(
                 controller: _cardController,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: "Card Number", border: OutlineInputBorder()),
+                decoration: InputDecoration(labelText: locale.cardNumber, border: const OutlineInputBorder()),
               ),
-
               Row(
                 children: [
                   Expanded(
                     child: TextField(
                       controller: _expiryController,
                       keyboardType: TextInputType.datetime,
-                      decoration: const InputDecoration(labelText: "MM/YY", border: OutlineInputBorder()),
+                      decoration: InputDecoration(labelText: locale.mmYy, border: const OutlineInputBorder()),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -122,19 +120,18 @@ class _DetailsState extends State<Details> {
                     child: TextField(
                       controller: _cvcController,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: "CVC", border: OutlineInputBorder()),
+                      decoration: InputDecoration(labelText: locale.cvc, border: const OutlineInputBorder()),
                     ),
                   ),
                 ],
               ),
-
               ElevatedButton.icon(
                 onPressed: () {
                   Navigator.pop(context);
                   _placeOrder();
                 },
                 icon: const Icon(Icons.lock),
-                label: const Text("Pay Now"),
+                label: Text(locale.payNow),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,
                   foregroundColor: Colors.white,
@@ -178,8 +175,58 @@ class _DetailsState extends State<Details> {
     }
   }
 
+  Widget _buildRelatedProducts() {
+    final locale = AppLocalizations.of(context)!;
+
+    return _relatedProducts.isEmpty
+        ? Text(locale.noRelatedProducts)
+        : GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              childAspectRatio: 0.75,
+            ),
+            itemCount: _relatedProducts.length,
+            itemBuilder: (context, index) {
+              final product = _relatedProducts[index].data() as Map<String, dynamic>;
+
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => Details(
+                        productId: _relatedProducts[index].id,
+                        productName: product['productName'],
+                        productPrice: (product['price'] as num?)?.toDouble(),
+                        originalPrice: (product['originalPrice'] as num?)?.toDouble(),
+                        productDetails: product['details'],
+                        productImageUrl: product['imageUrl'],
+                        ownerId: product['userId'],
+                        weight: (product['weight'] as num?)?.toDouble(),
+                        rating: (product['rating'] as num?)?.toDouble(),
+                      ),
+                    ),
+                  );
+                },
+                child: Column(
+                  children: [
+                    Image.network(product['imageUrl'], height: 80, fit: BoxFit.cover),
+                    Text(product['productName']),
+                  ],
+                ),
+              );
+            },
+          );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final locale = AppLocalizations.of(context)!;
+
     if (_isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
@@ -188,7 +235,7 @@ class _DetailsState extends State<Details> {
       backgroundColor: const Color(0xFFFAF3E0),
       appBar: AppBar(
         backgroundColor: const Color(0xFF8B5E3C),
-        title: const Text('Product Details'),
+        title: Text(locale.productDetails),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -240,7 +287,7 @@ class _DetailsState extends State<Details> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Buying this product saves ${(widget.weight! * _quantity).toStringAsFixed(2)} kg of food!',
+              locale.foodSaved((widget.weight! * _quantity).toStringAsFixed(2)),
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
@@ -250,61 +297,15 @@ class _DetailsState extends State<Details> {
                 backgroundColor: const Color(0xFF8B5E3C),
                 foregroundColor: Colors.white,
               ),
-              child: const Text('Buy Now'),
+              child: Text(locale.buyNow),
             ),
             const SizedBox(height: 16),
-            const Text('Related Products', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(locale.relatedProducts, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             _buildRelatedProducts(),
           ],
         ),
       ),
     );
-  }
-
-  Widget _buildRelatedProducts() {
-    return _relatedProducts.isEmpty
-        ? const Text('No related products available.')
-        : GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
-              childAspectRatio: 0.75,
-            ),
-            itemCount: _relatedProducts.length,
-            itemBuilder: (context, index) {
-              final product = _relatedProducts[index].data() as Map<String, dynamic>;
-
-              return GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => Details(
-                        productId: _relatedProducts[index].id,
-                        productName: product['productName'],
-                        productPrice: (product['price'] as num?)?.toDouble(),
-                        originalPrice: (product['originalPrice'] as num?)?.toDouble(),
-                        productDetails: product['details'],
-                        productImageUrl: product['imageUrl'],
-                        ownerId: product['userId'],
-                        weight: (product['weight'] as num?)?.toDouble(),
-                        rating: (product['rating'] as num?)?.toDouble(),
-                      ),
-                    ),
-                  );
-                },
-                child: Column(
-                  children: [
-                    Image.network(product['imageUrl'], height: 80, fit: BoxFit.cover),
-                    Text(product['productName']),
-                  ],
-                ),
-              );
-            },
-          );
   }
 }

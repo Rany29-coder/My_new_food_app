@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:my_new_food_app/pages/buyer/details.dart';
-
-import 'package:my_new_food_app/widget/widget_support.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -14,7 +13,9 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   String userName = '';
-  String selectedCategory = 'All';
+  String selectedCategoryKey = 'all';
+
+  final List<String> categoryKeys = ['all', 'frozen', 'dairy', 'baked', 'snacks'];
 
   @override
   void initState() {
@@ -25,10 +26,7 @@ class _HomeState extends State<Home> {
   Future<void> _fetchUserData() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      final userData = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
+      final userData = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
       setState(() {
         userName = userData['name'] ?? 'User';
       });
@@ -37,20 +35,31 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
+    final locale = AppLocalizations.of(context)!;
+
+    // Map category keys to their localized labels
+    final Map<String, String> localizedCategories = {
+      'all': locale.all,
+      'frozen': locale.frozen,
+      'dairy': locale.dairy,
+      'baked': locale.baked,
+      'snacks': locale.snacks,
+    };
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFCF5EE), // Light beige background
+      backgroundColor: const Color(0xFFFCF5EE),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 50),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header with User Greeting and Cart Icon
+            // Header
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  "Hello, $userName!",
-                  style: TextStyle(
+                  "${locale.hello} $userName!",
+                  style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF4E342E),
@@ -58,57 +67,50 @@ class _HomeState extends State<Home> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.shopping_cart, color: Color(0xFF71452E)),
-                  onPressed: () {
-                    // Navigate to cart page
-                  },
+                  onPressed: () {},
                 ),
               ],
             ),
             const SizedBox(height: 5),
             Text(
-              "Shop now!",
-              style: TextStyle(
+              locale.shopNow,
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF6D4C41),
               ),
             ),
             Text(
-              "Ready to save the food!",
-              style: TextStyle(
+              locale.readyToSave,
+              style: const TextStyle(
                 fontSize: 14,
                 color: Color(0xFF8C5C41),
               ),
             ),
             const SizedBox(height: 20),
 
-            // Category Selection (Rounded Buttons)
+            // Categories
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                children: ['All', 'Frozen', 'Dairy', 'Baked', 'Snacks'].map((category) {
+                children: categoryKeys.map((key) {
+                  final isSelected = selectedCategoryKey == key;
                   return GestureDetector(
                     onTap: () {
-                      setState(() {
-                        selectedCategory = category;
-                      });
+                      setState(() => selectedCategoryKey = key);
                     },
                     child: Container(
                       margin: const EdgeInsets.only(right: 10),
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                       decoration: BoxDecoration(
-                        color: selectedCategory == category
-                            ? Color(0xFF71452E) // Selected category color
-                            : Color(0xFFEDEAE7), // Unselected category color
+                        color: isSelected ? const Color(0xFF71452E) : const Color(0xFFEDEAE7),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        category,
+                        localizedCategories[key] ?? key,
                         style: TextStyle(
                           fontSize: 14,
-                          color: selectedCategory == category
-                              ? Colors.white
-                              : Color(0xFF4E342E),
+                          color: isSelected ? Colors.white : const Color(0xFF4E342E),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -119,7 +121,7 @@ class _HomeState extends State<Home> {
             ),
             const SizedBox(height: 20),
 
-            // Product Grid (Firestore)
+            // Products
             Expanded(
               child: StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance.collection('products').snapshots(),
@@ -129,25 +131,24 @@ class _HomeState extends State<Home> {
                   }
 
                   if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                    return const Center(
+                    return Center(
                       child: Text(
-                        "No products found. Please check your database.",
-                        style: TextStyle(fontSize: 16),
+                        locale.noProductsFound,
+                        style: const TextStyle(fontSize: 16),
                       ),
                     );
                   }
 
                   final products = snapshot.data!.docs.where((doc) {
-                    final productData = doc.data() as Map<String, dynamic>?;
-                    if (productData == null) return false;
-                    return selectedCategory == 'All' ||
-                        (productData.containsKey('category') &&
-                            productData['category'] == selectedCategory);
+                    final data = doc.data() as Map<String, dynamic>?;
+                    if (data == null) return false;
+                    return selectedCategoryKey == 'all' ||
+                        (data['category']?.toString().toLowerCase() == selectedCategoryKey);
                   }).toList();
 
                   return GridView.builder(
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2, // Two-column grid layout
+                      crossAxisCount: 2,
                       crossAxisSpacing: 10,
                       mainAxisSpacing: 10,
                       childAspectRatio: 0.75,
@@ -155,27 +156,23 @@ class _HomeState extends State<Home> {
                     itemCount: products.length,
                     itemBuilder: (context, index) {
                       final product = products[index];
-                      final productData = product.data() as Map<String, dynamic>?;
-
-                      if (productData == null) {
-                        return Container();
-                      }
+                      final data = product.data() as Map<String, dynamic>;
 
                       return GestureDetector(
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => Details(
-                                ownerId: productData['userId'],
+                              builder: (_) => Details(
+                                ownerId: data['userId'],
                                 productId: product.id,
-                                productName: productData['productName'],
-                                productPrice: productData['price'],
-                                productDetails: productData['details'],
-                                productImageUrl: productData['imageUrl'],
-                                originalPrice: productData['originalPrice'],
-                                weight: productData['weight'],
-                                rating: productData['rating'],
+                                productName: data['productName'],
+                                productPrice: data['price'],
+                                productDetails: data['details'],
+                                productImageUrl: data['imageUrl'],
+                                originalPrice: data['originalPrice'],
+                                weight: data['weight'],
+                                rating: data['rating'],
                               ),
                             ),
                           );
@@ -195,7 +192,7 @@ class _HomeState extends State<Home> {
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(8),
                                   child: Image.network(
-                                    productData['imageUrl'],
+                                    data['imageUrl'],
                                     height: 100,
                                     width: double.infinity,
                                     fit: BoxFit.cover,
@@ -203,16 +200,16 @@ class _HomeState extends State<Home> {
                                 ),
                                 const SizedBox(height: 10),
                                 Text(
-                                  productData['productName'],
-                                  style: TextStyle(
+                                  data['productName'],
+                                  style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                     color: Color(0xFF4E342E),
                                   ),
                                 ),
                                 Text(
-                                  productData['details'],
-                                  style: TextStyle(
+                                  data['details'],
+                                  style: const TextStyle(
                                     fontSize: 12,
                                     color: Color(0xFF8C5C41),
                                   ),
@@ -222,7 +219,7 @@ class _HomeState extends State<Home> {
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
-                                      "\$${productData['price']}",
+                                      "\$${data['price']}",
                                       style: const TextStyle(
                                         fontSize: 16,
                                         color: Color(0xFF009688),
@@ -230,7 +227,7 @@ class _HomeState extends State<Home> {
                                       ),
                                     ),
                                     Text(
-                                      "\$${productData['originalPrice']}",
+                                      "\$${data['originalPrice']}",
                                       style: const TextStyle(
                                         fontSize: 14,
                                         color: Colors.red,
