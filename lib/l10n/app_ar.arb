@@ -242,7 +242,9 @@
   "errorPickingImage": "حدث خطأ أثناء اختيار الصورة: {error}",
 "@errorPickingImage": {
   "placeholders": {
-    "error": {}
+    "error": {
+      "type": "Object"
+    }
   }
 },
 "errorLoggingOut": "حدث خطأ أثناء تسجيل الخروج",
@@ -264,7 +266,9 @@
 "statusUpdateError": "فشل في تحديث حالة الطلب: {error}",
 "@statusUpdateError": {
   "placeholders": {
-    "error": {}
+    "error": {
+      "type": "Object"
+    }
   }
 },
 "markAsProcessing": "تعيين كـ قيد المعالجة",

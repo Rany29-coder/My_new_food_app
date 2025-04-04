@@ -239,7 +239,9 @@
   "errorPickingImage": "Error picking image: {error}",
 "@errorPickingImage": {
   "placeholders": {
-    "error": {}
+    "error": {
+      "type": "Object"
+    }
   }
 }
 ,
@@ -262,7 +264,9 @@
 "statusUpdateError": "Failed to update order status: {error}",
 "@statusUpdateError": {
   "placeholders": {
-    "error": {}
+    "error": {
+      "type": "Object"
+    }
   }
 },
 "markAsProcessing": "Mark as Processing",
