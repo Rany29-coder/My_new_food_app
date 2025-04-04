@@ -69,11 +69,15 @@
   "relatedProducts": "منتجات مشابهة",
   "noRelatedProducts": "لا توجد منتجات مشابهة.",
   "foodSaved": "هذا البائع وفر {kg} كجم من الطعام!",
+"foodSaved": "هذا البائع وفر {kg} كجم من الطعام!",
 "@foodSaved": {
   "placeholders": {
-    "kg": {}
+    "kg": {
+      "type": "double"
+    }
   }
 },
+
   "paymentDetails": "تفاصيل الدفع",
   "youAreSaving": "أنت توفر: {amount}",
   "@youAreSaving": {
@@ -263,7 +267,6 @@
 "markAsCompleted": "تعيين كـ مكتمل",
 "markAsCancelled": "تعيين كـ ملغي",
 "statusProcessing": "قيد المعالجة"
-
 
 
 
