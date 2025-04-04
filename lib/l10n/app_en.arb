@@ -2,7 +2,6 @@
   "@@locale": "en",
   "buyNow": "Buy Now",
   "productDetails": "Product Details",
-
   "baraka": "Baraka",
   "welcomeBack": "Welcome back! Sign in to continue your food-saving journey.",
   "email": "EMAIL",
@@ -14,7 +13,6 @@
   "logIn": "LOG IN",
   "dontHaveAccount": "Don't have an account?",
   "signUp": "SIGN UP",
-
   "postProduct": "Post a Product",
   "productName": "Product Name",
   "originalPrice": "Original Price",
@@ -24,12 +22,10 @@
   "uploadImage": "Upload Image",
   "productPostedSuccess": "Product posted successfully",
   "postProductButton": "Post Product",
-
   "enterEmailInstruction": "Enter your email to receive a password reset link",
   "resetPassword": "RESET PASSWORD",
   "passwordResetSent": "Password reset email sent",
   "emailNotRegistered": "Email not registered",
-
   "emailLabel": "Email Address",
   "passwordLabel": "Password",
   "noAccount": "Don’t have an account?",
@@ -47,12 +43,10 @@
   "darkMode": "Dark Mode",
   "darkModeEnabled": "Dark mode is enabled",
   "lightModeEnabled": "Light mode is enabled",
-
   "inviteFriends": "Invite Friends",
   "inviteSubtitle": "Spread the word and invite others!",
   "inviteMessage": "🌱 Join me in making a difference! I'm using this app to save food & help the community. Download it now! 📲💚",
   "inviteCopied": "Invitation copied! Share it now 🎉",
-
   "changePassword": "Change Password",
   "changePasswordSubtitle": "Update your password for security",
   "oldPassword": "Old Password",
@@ -61,22 +55,19 @@
   "update": "Update",
   "passwordChanged": "Password changed successfully!",
   "error": "Error",
-
   "logout": "Logout",
   "logoutSubtitle": "Sign out of your account",
   "logoutError": "Error logging out",
-
   "relatedProducts": "Related Products",
   "noRelatedProducts": "No related products available.",
   "foodSaved": "Buying this product saves {kg} kg of food!",
   "@foodSaved": {
-  "placeholders": {
-    "kg": {
-      "type": "double"
+    "placeholders": {
+      "kg": {
+        "type": "double"
+      }
     }
-  }
-},
-
+  },
   "paymentDetails": "Payment Details",
   "youAreSaving": "You're saving: {amount}",
   "@youAreSaving": {
@@ -141,11 +132,11 @@
   "dairy": "Dairy",
   "baked": "Baked",
   "snacks": "Snacks",
-  "noProductsFound": "No products found. Please check your database.","celebrationTitle": "Congratulations! 🎉",
+  "noProductsFound": "No products found. Please check your database.",
+  "celebrationTitle": "Congratulations! 🎉",
   "celebrationImpact": "You just saved {amount} and prevented {kg} kg of food from being wasted! 🌍💚",
   "celebrationMotivation": "Every small action makes a big difference. Keep shopping and making an impact!",
   "continueShopping": "Continue Shopping 🛍️",
-  "myOrders": "My Orders",
   "userNotLoggedIn": "User not logged in.",
   "noOrdersFound": "No orders found.",
   "unknownProduct": "Unknown Product",
@@ -165,122 +156,75 @@
   "deliveryOptionsHint": "Enter your delivery options",
   "storeLogo": "Store Logo",
   "uploadStoreLogo": "Upload Store Logo",
-  "completeRegistration": "Complete Registration",
   "addProductTitle": "Add Product",
-  "productName": "Product Name",
   "price": "Price",
-  "originalPrice": "Original Price",
-  "expiryDate": "Expiry Date (YYYY-MM-DD)",
   "details": "Details",
   "weight": "Weight (kg)",
   "rating": "Rating (0-5)",
-  "noImageSelected": "No image selected.",
   "pickImage": "Pick Image",
-  "addProduct": "Add Product",
   "fillAllFields": "Please fill all fields",
   "productAdded": "Product added successfully!",
   "userNotAuthenticated": "User not authenticated",
   "imageUploadFailed": "Image upload failed: {error}",
   "imagePickFailed": "Failed to pick image: {error}",
   "productAddFailed": "Failed to add product: {error}",
-   "editProduct": "Edit Product",
-    "productName": "Product Name",
-    "price": "Price",
-    "originalPrice": "Original Price",
-    "expiryDate": "Expiry Date (YYYY-MM-DD)",
-    "details": "Details",
-    "weight": "Weight (kg)",
-    "rating": "Rating (0-5)",
-    "noImage": "No image selected.",
-    "pickImage": "Pick Image",
-    "saveChanges": "Save Changes",
-    "pleaseFillAllFields": "Please fill all fields",
-    "error": "Error",
-    "manageProducts": "Manage Products",
-  "noProductsFound": "No products found.",
+  "editProduct": "Edit Product",
+  "saveChanges": "Save Changes",
+  "pleaseFillAllFields": "Please fill all fields",
+  "manageProducts": "Manage Products",
   "priceLabel": "Price: $",
   "productDeleted": "Product deleted successfully",
   "deleteError": "Error deleting product: {error}",
-  "edit": "Edit",
-  "delete": "Delete",
-  "unknownProduct": "Unknown Product",
   "noDetailsAvailable": "No details available",
-   "unknownCustomer": "Unknown Customer",
-  "statusPending": "Pending",
-  "statusCompleted": "Completed",
-  "statusCancelled": "Cancelled",
+  "unknownCustomer": "Unknown Customer",
   "profileTitle": "Profile",
-  "storeName": "Store Name",
   "address": "Address",
   "contactDetails": "Contact Details",
-  "businessHours": "Business Hours",
-  "deliveryOptions": "Delivery Options",
   "noStoreLogo": "No store logo selected.",
   "pickStoreLogo": "Pick Store Logo",
   "updateStoreInfo": "Update Store Information",
-  "logoutError": "Error logging out",
   "updateSuccess": "Store information updated successfully",
   "updateError": "Error updating store info",
-  "fillAllFields": "Please fill all fields",
   "storeFetchError": "Error fetching store info",
   "welcomeBaraka": "Welcome to Baraka!",
   "joinMission": "Join us in making a difference by reducing food waste and helping your community.",
-  "storeName": "Store Name",
   "storeLocation": "Store Location",
   "nationalID": "National ID",
   "businessGoals": "Business Goals",
   "uploadStoreImage": "Upload Store Image",
   "register": "Register",
   "requiredField": "Required field",
-  "userNotAuthenticated": "User not authenticated. Please sign in again.",
   "registrationError": "An error occurred",
   "registering": "Registering...",
   "unnamedProduct": "Unnamed Product",
   "errorPickingImage": "Error picking image: {error}",
-"@errorPickingImage": {
-  "placeholders": {
-    "error": {
-      "type": "Object"
+  "@errorPickingImage": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
     }
-  }
-}
-,
-"errorLoggingOut": "An error occurred while logging out.",
-"orderId": "Order ID",
-"customer": "Customer",
-"total": "Total",
-"statusPending": "Pending",
-"statusCompleted": "Completed",
-"statusCancelled": "Cancelled",
-"noOrdersFound": "No orders found.",
-"myOrders": "My Orders",
-"orderDetails": "Order Details",
-"statusUpdated": "Order status updated to {status}",
-"@statusUpdated": {
-  "placeholders": {
-    "status": {}
-  }
-},
-"statusUpdateError": "Failed to update order status: {error}",
-"@statusUpdateError": {
-  "placeholders": {
-    "error": {
-      "type": "Object"
+  },
+  "errorLoggingOut": "An error occurred while logging out.",
+  "orderId": "Order ID",
+  "customer": "Customer",
+  "orderDetails": "Order Details",
+  "statusUpdated": "Order status updated to {status}",
+  "@statusUpdated": {
+    "placeholders": {
+      "status": {}
     }
-  }
-},
-"markAsProcessing": "Mark as Processing",
-"markAsCompleted": "Mark as Completed",
-"markAsCancelled": "Mark as Cancelled",
-"statusProcessing": "Processing"
-
-
-
-
-
-
-
-
-
-
+  },
+  "statusUpdateError": "Failed to update order status: {error}",
+  "@statusUpdateError": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
+  "markAsProcessing": "Mark as Processing",
+  "markAsCompleted": "Mark as Completed",
+  "markAsCancelled": "Mark as Cancelled",
+  "statusProcessing": "Processing"
 }
