@@ -177,7 +177,7 @@ class _WalletState extends State<Wallet> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          locale.foodSaved(_totalWeight.toStringAsFixed(2)),
+                          locale.foodSaved(_totalWeight),
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,

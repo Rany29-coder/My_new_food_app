@@ -70,10 +70,13 @@
   "noRelatedProducts": "No related products available.",
   "foodSaved": "Buying this product saves {kg} kg of food!",
   "@foodSaved": {
-    "placeholders": {
-      "kg": {}
+  "placeholders": {
+    "kg": {
+      "type": "double"
     }
-  },
+  }
+},
+
   "paymentDetails": "Payment Details",
   "youAreSaving": "You're saving: {amount}",
   "@youAreSaving": {

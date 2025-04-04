@@ -229,7 +229,7 @@ class _StoreDashboardState extends State<StoreDashboard> {
           _buildStatCard(locale.totalSales, "\$${_totalSales.toStringAsFixed(2)}", Icons.attach_money),
           _buildStatCard(locale.totalOrders, "$_totalOrders", Icons.shopping_cart),
           _buildStatCard(locale.averageOrderValue, "\$${_averageOrderValue.toStringAsFixed(2)}", Icons.bar_chart),
-          _buildStatCard(locale.foodSaved(''), "${_totalFoodSaved.toStringAsFixed(1)} kg", Icons.eco),
+          _buildStatCard(locale.foodSaved(_totalFoodSaved), "${_totalFoodSaved.toStringAsFixed(1)} kg", Icons.eco),
           _buildStatCard(locale.communityFoodSaved, "${_communityFoodSaved.toStringAsFixed(1)} kg", Icons.people),
           _buildStatCard(locale.communityMoneySaved, "\$${_communityMoneySaved.toStringAsFixed(2)}", Icons.savings),
         ],
@@ -316,7 +316,7 @@ class _StoreDashboardState extends State<StoreDashboard> {
             return ListTile(
               leading: const Icon(Icons.store, color: kDarkBrown),
               title: Text("${locale.sellerName}: ${seller.storeName}", style: const TextStyle(color: kSoftBrown)),
-              subtitle: Text(locale.foodSaved(seller.totalFoodSaved.toStringAsFixed(1)), style: const TextStyle(color: kDarkBrown)),
+              subtitle: Text(locale.foodSaved(seller.totalFoodSaved), style: const TextStyle(color: kDarkBrown)),
             );
           }).toList(),
         ),
