@@ -1,13 +1,16 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 class Product {
   final String id;
   final String name;
   final double price;
-  final double originalPrice; // Original price
+  final double originalPrice;
   final DateTime expiryDate;
   final String details;
   final String imageUrl;
-  final double weight; // Weight
-  final double rating; // Rating
+  final double weight;
+  final double rating;
 
   Product({
     required this.id,
@@ -21,22 +24,24 @@ class Product {
     required this.rating,
   });
 
-factory Product.fromMap(Map<String, dynamic> map, String id) {
-  return Product(
-    id: id,
-    name: map['productName'] ?? 'Unknown', // Provide a default value
-    price: map['price'] != null ? double.parse(map['price'].toString()) : 0.0,
-    originalPrice: map['originalPrice'] != null ? double.parse(map['originalPrice'].toString()) : 0.0,
-    expiryDate: map['expiryDate'] != null
-        ? DateTime.parse(map['expiryDate'])
-        : DateTime.now(), // Provide a default date
-    details: map['details'] ?? 'No details available', // Provide default text
-    imageUrl: map['imageUrl'] ?? '', // Default to an empty string
-    weight: map['weight'] != null ? double.parse(map['weight'].toString()) : 0.0,
-    rating: map['rating'] != null ? double.parse(map['rating'].toString()) : 0.0,
-  );
-}
+  /// Factory with localization context
+  factory Product.fromMap(Map<String, dynamic> map, String id, BuildContext context) {
+    final locale = AppLocalizations.of(context)!;
 
+    return Product(
+      id: id,
+      name: map['productName'] ?? locale.unknownProduct,
+      price: map['price'] != null ? double.tryParse(map['price'].toString()) ?? 0.0 : 0.0,
+      originalPrice: map['originalPrice'] != null ? double.tryParse(map['originalPrice'].toString()) ?? 0.0 : 0.0,
+      expiryDate: map['expiryDate'] != null
+          ? DateTime.tryParse(map['expiryDate']) ?? DateTime.now()
+          : DateTime.now(),
+      details: map['details'] ?? locale.noDetailsAvailable,
+      imageUrl: map['imageUrl'] ?? '',
+      weight: map['weight'] != null ? double.tryParse(map['weight'].toString()) ?? 0.0 : 0.0,
+      rating: map['rating'] != null ? double.tryParse(map['rating'].toString()) ?? 0.0 : 0.0,
+    );
+  }
 
   Map<String, dynamic> toMap() {
     return {

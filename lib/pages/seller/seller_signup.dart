@@ -5,9 +5,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
-import 'package:my_new_food_app/pages/seller/dashboard/store_dashboard.dart';
 import 'package:my_new_food_app/pages/seller/onboarding/SellerOnboardingStep1.dart';
-import 'package:my_new_food_app/pages/seller/onboarding/SellerOnboardingStep2.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 class SellerSignUpPage extends StatefulWidget {
   const SellerSignUpPage({Key? key}) : super(key: key);
 
@@ -39,6 +39,7 @@ class _SellerSignUpPageState extends State<SellerSignUpPage> {
   }
 
   Future<void> _registerSeller() async {
+    final locale = AppLocalizations.of(context)!;
     if (_formKey.currentState?.validate() ?? false) {
       _formKey.currentState?.save();
       setState(() {
@@ -49,7 +50,6 @@ class _SellerSignUpPageState extends State<SellerSignUpPage> {
       try {
         final user = _auth.currentUser;
         if (user != null) {
-          // Upload store image if selected
           String imageUrl = '';
           if (_storeImage != null) {
             final storageRef =
@@ -58,7 +58,6 @@ class _SellerSignUpPageState extends State<SellerSignUpPage> {
             imageUrl = await storageRef.getDownloadURL();
           }
 
-          // Save seller data
           await _firestore.collection('sellers').doc(user.uid).set({
             'storeName': _storeName,
             'storeLocation': _storeLocation,
@@ -67,19 +66,18 @@ class _SellerSignUpPageState extends State<SellerSignUpPage> {
             'goals': _goals,
           });
 
-          // Navigate to Store Dashboard
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const SellerOnboardingStep1()),
           );
         } else {
           setState(() {
-            _errorMessage = 'User not authenticated. Please sign in again.';
+            _errorMessage = locale.userNotAuthenticated;
           });
         }
       } catch (e) {
         setState(() {
-          _errorMessage = 'An error occurred: $e';
+          _errorMessage = "${locale.registrationError}: $e";
         });
       } finally {
         setState(() {
@@ -91,8 +89,10 @@ class _SellerSignUpPageState extends State<SellerSignUpPage> {
 
   @override
   Widget build(BuildContext context) {
+    final locale = AppLocalizations.of(context)!;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF3E0), // Light beige background
+      backgroundColor: const Color(0xFFFAF3E0),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 50),
@@ -100,12 +100,11 @@ class _SellerSignUpPageState extends State<SellerSignUpPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // 🎉 Mascot & Welcome Message
-                Image.asset('images/Seller_signup.jpg'), // Mascot image
+                Image.asset('images/Seller_signup.jpg'),
                 const SizedBox(height: 10),
-                const Text(
-                  "Welcome to Baraka!",
-                  style: TextStyle(
+                Text(
+                  locale.welcomeBaraka,
+                  style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF5A3D2B),
@@ -113,52 +112,40 @@ class _SellerSignUpPageState extends State<SellerSignUpPage> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 5),
-                const Text(
-                  "Join us in making a difference by reducing food waste and helping your community.",
-                  style: TextStyle(
+                Text(
+                  locale.joinMission,
+                  style: const TextStyle(
                     fontSize: 16,
                     color: Color(0xFF8B5E3C),
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
-
-                // 📝 Form Section
                 Form(
                   key: _formKey,
                   child: Column(
                     children: [
-                      // 🏬 Store Name
                       _buildInputField(
                         icon: Icons.store,
-                        hintText: "Store Name",
+                        hintText: locale.storeName,
                         onSaved: (value) => _storeName = value!,
                       ),
-
-                      // 📍 Store Location
                       _buildInputField(
                         icon: Icons.location_on,
-                        hintText: "Store Location",
+                        hintText: locale.storeLocation,
                         onSaved: (value) => _storeLocation = value!,
                       ),
-
-                      // 💳 National ID
                       _buildInputField(
                         icon: Icons.credit_card,
-                        hintText: "National ID",
+                        hintText: locale.nationalID,
                         onSaved: (value) => _nationalID = value!,
                       ),
-
-                      // 🎯 Business Goals
                       _buildInputField(
                         icon: Icons.emoji_objects,
-                        hintText: "Business Goals",
+                        hintText: locale.businessGoals,
                         onSaved: (value) => _goals = value!,
                       ),
-
                       const SizedBox(height: 10),
-
-                      // 📷 Upload Image Button
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF8B5E3C),
@@ -170,12 +157,9 @@ class _SellerSignUpPageState extends State<SellerSignUpPage> {
                           ),
                         ),
                         onPressed: _pickImage,
-                        child: const Text("Upload Store Image"),
+                        child: Text(locale.uploadStoreImage),
                       ),
-
                       const SizedBox(height: 15),
-
-                      // 📸 Store Image Preview
                       if (_storeImage != null)
                         ClipRRect(
                           borderRadius: BorderRadius.circular(8),
@@ -184,12 +168,8 @@ class _SellerSignUpPageState extends State<SellerSignUpPage> {
                             height: 120,
                             fit: BoxFit.cover,
                           ),
-                        )
-                      else
-
+                        ),
                       const SizedBox(height: 15),
-
-                      // 🔥 Register Button
                       _isLoading
                           ? const CircularProgressIndicator()
                           : ElevatedButton(
@@ -203,13 +183,12 @@ class _SellerSignUpPageState extends State<SellerSignUpPage> {
                                 ),
                               ),
                               onPressed: _registerSeller,
-                              child: const Text(
-                                "Register",
-                                style: TextStyle(
+                              child: Text(
+                                locale.register,
+                                style: const TextStyle(
                                     fontSize: 18, fontWeight: FontWeight.bold),
                               ),
                             ),
-
                       const SizedBox(height: 20),
                     ],
                   ),
@@ -222,12 +201,12 @@ class _SellerSignUpPageState extends State<SellerSignUpPage> {
     );
   }
 
-  // 📌 Input Field Widget with Icons
   Widget _buildInputField({
     required IconData icon,
     required String hintText,
     required FormFieldSetter<String> onSaved,
   }) {
+    final locale = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextFormField(
@@ -241,7 +220,7 @@ class _SellerSignUpPageState extends State<SellerSignUpPage> {
             borderSide: const BorderSide(color: Colors.brown, width: 1),
           ),
         ),
-        validator: (value) => value!.isEmpty ? 'Required field' : null,
+        validator: (value) => value!.isEmpty ? locale.requiredField : null,
         onSaved: onSaved,
       ),
     );

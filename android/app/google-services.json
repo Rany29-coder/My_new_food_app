@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "170527388370",
+    "project_id": "capstone-3e283",
+    "storage_bucket": "capstone-3e283.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:170527388370:android:2b99c1b08f6fd26411730b",
+        "android_client_info": {
+          "package_name": "com.example.my_new_food_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB308bJ9_fX0MBfjDjgBn6Ml-zkWIvZgQQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

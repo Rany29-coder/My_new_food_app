@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:pie_chart/pie_chart.dart' as pc
     show PieChart, ChartType, LegendPosition, ChartValuesOptions, LegendOptions;
-import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
@@ -25,7 +24,6 @@ class _StoreDashboardState extends State<StoreDashboard> {
   double _totalSales = 0.0;
   int _totalOrders = 0;
   double _averageOrderValue = 0.0;
-  int _activeListings = 0;
   double _totalFoodSaved = 0.0;
   double _communityFoodSaved = 0.0;
   double _communityMoneySaved = 0.0;
@@ -61,7 +59,7 @@ class _StoreDashboardState extends State<StoreDashboard> {
         await _calculateStats(ordersSnapshot.docs, productsSnapshot.docs);
       }
     } catch (e) {
-      print("\u26A0\uFE0F Error fetching seller data: $e");
+      print("⚠️ Error fetching seller data: $e");
     }
   }
 
@@ -71,7 +69,7 @@ class _StoreDashboardState extends State<StoreDashboard> {
     double totalFoodSaved = 0.0;
 
     final productMap = {
-      for (var p in products) p.id: p.data() as Map<String, dynamic>?
+      for (var p in products) p.id: p.data() as Map<String, dynamic>
     };
 
     for (var orderDoc in orders) {
@@ -89,14 +87,12 @@ class _StoreDashboardState extends State<StoreDashboard> {
 
         totalFoodSaved += weight * quantity;
         _productNames[productId] = productName;
-
         _productSalesMap[productId] =
             (_productSalesMap[productId] ?? 0) + orderTotal;
       }
 
       if (data['timestamp'] is Timestamp) {
-        final Timestamp ts = data['timestamp'];
-        final DateTime date = ts.toDate();
+        final DateTime date = (data['timestamp'] as Timestamp).toDate();
         final String monthKey = DateFormat('yyyy-MM').format(date);
         _ordersByMonth[monthKey] = (_ordersByMonth[monthKey] ?? 0) + 1;
       }
@@ -106,8 +102,7 @@ class _StoreDashboardState extends State<StoreDashboard> {
       setState(() {
         _totalSales = totalSales;
         _totalOrders = totalOrders;
-        _averageOrderValue = (totalOrders > 0) ? (totalSales / totalOrders) : 0.0;
-        _activeListings = products.length;
+        _averageOrderValue = totalOrders > 0 ? totalSales / totalOrders : 0.0;
         _totalFoodSaved = totalFoodSaved;
         _isLoading = false;
       });
@@ -125,27 +120,20 @@ class _StoreDashboardState extends State<StoreDashboard> {
 
       final ordersSnapshot = await _firestore.collection('orders').get();
       final productsSnapshot = await _firestore.collection('products').get();
+      final productMap = {
+        for (var doc in productsSnapshot.docs) doc.id: doc.data()
+      };
 
       for (var order in ordersSnapshot.docs) {
         final data = order.data();
         final productId = data['productId'] as String?;
         final quantity = (data['quantity'] as num?)?.toInt() ?? 1;
 
-        if (productId != null) {
-          final productDoc = productsSnapshot.docs.firstWhere(
-            (p) => p.id == productId,
-            orElse: () => throw Exception('Product not found'),
-          );
-
-          if (productDoc != null) {
-            final productData = productDoc.data();
-            final originalPrice =
-                (productData['originalPrice'] as num?)?.toDouble() ?? 0.0;
-            final currentPrice =
-                (productData['price'] as num?)?.toDouble() ?? 0.0;
-
-            totalMoneySaved += (originalPrice - currentPrice) * quantity;
-          }
+        if (productId != null && productMap.containsKey(productId)) {
+          final productData = productMap[productId]!;
+          final originalPrice = (productData['originalPrice'] as num?)?.toDouble() ?? 0.0;
+          final currentPrice = (productData['price'] as num?)?.toDouble() ?? 0.0;
+          totalMoneySaved += (originalPrice - currentPrice) * quantity;
         }
       }
 
@@ -156,24 +144,26 @@ class _StoreDashboardState extends State<StoreDashboard> {
         });
       }
     } catch (e) {
-      print("\u26A0\uFE0F Error updating community impact: $e");
+      print("⚠️ Error updating community impact: $e");
     }
   }
 
   Future<void> _fetchLeaderboard() async {
     try {
       final sellersSnapshot = await _firestore.collection('sellers').get();
-      final Map<String, LeaderboardEntry> sellerStats = {};
-
-      for (var seller in sellersSnapshot.docs) {
-        final sellerId = seller.id;
-        final storeName = seller.data()['storeName'] ?? "Unknown Store";
-        sellerStats[sellerId] =
-            LeaderboardEntry(storeName: storeName, totalFoodSaved: 0.0);
-      }
+      final Map<String, LeaderboardEntry> sellerStats = {
+        for (var s in sellersSnapshot.docs)
+          s.id: LeaderboardEntry(
+            storeName: s.data()['storeName'] ?? 'Unknown Store',
+            totalFoodSaved: 0.0,
+          )
+      };
 
       final ordersSnapshot = await _firestore.collection('orders').get();
       final productsSnapshot = await _firestore.collection('products').get();
+      final productMap = {
+        for (var doc in productsSnapshot.docs) doc.id: doc.data()
+      };
 
       for (var order in ordersSnapshot.docs) {
         final data = order.data();
@@ -181,33 +171,25 @@ class _StoreDashboardState extends State<StoreDashboard> {
         final productId = data['productId'] as String?;
         final quantity = (data['quantity'] as num?)?.toInt() ?? 1;
 
-        if (ownerId != null &&
-            productId != null &&
-            sellerStats.containsKey(ownerId)) {
-          final productDoc = productsSnapshot.docs.firstWhere(
-            (p) => p.id == productId,
-            orElse: () => throw Exception('Product not found'),
-          );
-
-          if (productDoc != null) {
-            final productData = productDoc.data();
+        if (ownerId != null && productId != null && sellerStats.containsKey(ownerId)) {
+          if (productMap.containsKey(productId)) {
+            final productData = productMap[productId]!;
             final weight = (productData['weight'] as num?)?.toDouble() ?? 0.0;
             sellerStats[ownerId]!.totalFoodSaved += weight * quantity;
           }
         }
       }
 
-      List<LeaderboardEntry> topSellers = sellerStats.values.toList();
-      topSellers.sort((a, b) => b.totalFoodSaved.compareTo(a.totalFoodSaved));
-      topSellers = topSellers.take(5).toList();
+      final topSellers = sellerStats.values.toList()
+        ..sort((a, b) => b.totalFoodSaved.compareTo(a.totalFoodSaved));
 
       if (mounted) {
         setState(() {
-          _topSellers = topSellers;
+          _topSellers = topSellers.take(5).toList();
         });
       }
     } catch (e) {
-      print("\u26A0\uFE0F Error fetching leaderboard: $e");
+      print("⚠️ Error fetching leaderboard: $e");
     }
   }
 
@@ -219,8 +201,7 @@ class _StoreDashboardState extends State<StoreDashboard> {
       backgroundColor: kBackgroundColor,
       appBar: AppBar(
         backgroundColor: kSoftBrown,
-        title: Text(locale.storeDashboardTitle,
-            style: const TextStyle(color: Colors.white)),
+        title: Text(locale.storeDashboardTitle, style: const TextStyle(color: Colors.white)),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -232,8 +213,6 @@ class _StoreDashboardState extends State<StoreDashboard> {
                   _buildStatsRow(locale),
                   const SizedBox(height: 20),
                   _buildPieChart(locale),
-                  const SizedBox(height: 20),
-                  _buildMonthlyOrdersBarChart(locale),
                   const SizedBox(height: 20),
                   _buildLeaderboard(locale),
                 ],
@@ -283,11 +262,10 @@ class _StoreDashboardState extends State<StoreDashboard> {
       return _noDataCard(locale.noProductSalesData);
     }
 
-    final dataMap = <String, double>{};
-    _productSalesMap.forEach((productId, sales) {
-      final productName = _productNames[productId] ?? productId;
-      dataMap[productName] = sales;
-    });
+    final dataMap = {
+      for (var entry in _productSalesMap.entries)
+        _productNames[entry.key] ?? entry.key: entry.value
+    };
 
     return Card(
       color: Colors.white,
@@ -328,14 +306,6 @@ class _StoreDashboardState extends State<StoreDashboard> {
         ),
       );
 
-  Widget _buildMonthlyOrdersBarChart(AppLocalizations locale) {
-    if (_ordersByMonth.isEmpty) {
-      return _noDataCard(locale.noMonthlyOrdersData);
-    }
-    // same bar chart logic from your version...
-    return Container(); // Placeholder for brevity
-  }
-
   Widget _buildLeaderboard(AppLocalizations locale) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -346,7 +316,7 @@ class _StoreDashboardState extends State<StoreDashboard> {
             return ListTile(
               leading: const Icon(Icons.store, color: kDarkBrown),
               title: Text("${locale.sellerName}: ${seller.storeName}", style: const TextStyle(color: kSoftBrown)),
-              subtitle: Text("${locale.foodSaved}: ${seller.totalFoodSaved.toStringAsFixed(1)} kg", style: const TextStyle(color: kDarkBrown)),
+              subtitle: Text(locale.foodSaved(seller.totalFoodSaved.toStringAsFixed(1)), style: const TextStyle(color: kDarkBrown)),
             );
           }).toList(),
         ),

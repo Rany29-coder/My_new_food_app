@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'order_details_page.dart';
 import 'order_model.dart' as my_new_food_app_order;
 
@@ -28,19 +29,17 @@ class _OrdersPageState extends State<OrdersPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      /// 1) Off-white background
-      backgroundColor: kBackgroundColor,
+    final locale = AppLocalizations.of(context)!;
 
-      /// 2) Soft brown app bar with white text
+    return Scaffold(
+      backgroundColor: kBackgroundColor,
       appBar: AppBar(
         backgroundColor: kSoftBrown,
-        title: const Text(
-          'Orders',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          locale.myOrders,
+          style: const TextStyle(color: Colors.white),
         ),
       ),
-
       body: StreamBuilder<QuerySnapshot>(
         stream: _firestore
             .collection('orders')
@@ -60,10 +59,10 @@ class _OrdersPageState extends State<OrdersPage> {
               [];
 
           if (orders.isEmpty) {
-            return const Center(
+            return Center(
               child: Text(
-                'No orders found.',
-                style: TextStyle(color: kDarkBrown, fontSize: 16),
+                locale.noOrdersFound,
+                style: const TextStyle(color: kDarkBrown, fontSize: 16),
               ),
             );
           }
@@ -81,19 +80,19 @@ class _OrdersPageState extends State<OrdersPage> {
                 elevation: 2,
                 child: ListTile(
                   title: Text(
-                    'Order ID: ${order.id}',
+                    '${locale.orderId}: ${order.id}',
                     style: const TextStyle(
                       color: kDarkBrown,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   subtitle: Text(
-                    'Customer: ${order.buyerId}  •  '
-                    'Total: \$${order.totalPrice.toStringAsFixed(2)}',
+                    '${locale.customer}: ${order.buyerId}  •  '
+                    '${locale.total}: \$${order.totalPrice.toStringAsFixed(2)}',
                     style: const TextStyle(color: kSoftBrown),
                   ),
                   trailing: Text(
-                    order.status,
+                    _localizedStatus(order.status, locale),
                     style: const TextStyle(
                       color: kDarkBrown,
                       fontWeight: FontWeight.bold,
@@ -114,5 +113,18 @@ class _OrdersPageState extends State<OrdersPage> {
         },
       ),
     );
+  }
+
+  String _localizedStatus(String status, AppLocalizations locale) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return locale.statusPending;
+      case 'completed':
+        return locale.statusCompleted;
+      case 'cancelled':
+        return locale.statusCancelled;
+      default:
+        return status;
+    }
   }
 }

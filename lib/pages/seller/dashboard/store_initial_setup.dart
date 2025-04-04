@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:my_new_food_app/pages/seller/dashboard/store_dashboard.dart';
 
 class StoreInitialSetup extends StatefulWidget {
@@ -50,7 +51,7 @@ class _StoreInitialSetupState extends State<StoreInitialSetup> {
         });
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => StoreDashboard()),
+          MaterialPageRoute(builder: (context) => const StoreDashboard()),
         );
       }
     } catch (e) {
@@ -65,109 +66,82 @@ class _StoreInitialSetupState extends State<StoreInitialSetup> {
 
   @override
   Widget build(BuildContext context) {
+    final locale = AppLocalizations.of(context)!;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Store Initial Setup'),
+        title: Text(locale.storeInitialSetup),
       ),
       body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Store Name',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(locale.storeName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            TextField(
+              controller: _storeNameController,
+              decoration: InputDecoration(
+                hintText: locale.storeNameHint,
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
               ),
-              TextField(
-                controller: _storeNameController,
-                decoration: InputDecoration(
-                  hintText: 'Enter your store name',
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none,
+            ),
+            const SizedBox(height: 20),
+            Text(locale.businessHours, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            TextField(
+              controller: _businessHoursController,
+              decoration: InputDecoration(
+                hintText: locale.businessHoursHint,
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(locale.deliveryOptions, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            TextField(
+              controller: _deliveryOptionsController,
+              decoration: InputDecoration(
+                hintText: locale.deliveryOptionsHint,
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(locale.storeLogo, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            Center(
+              child: Column(
+                children: [
+                  _storeLogo != null
+                      ? Image.file(_storeLogo!, height: 100)
+                      : const Icon(Icons.image, size: 100, color: Colors.grey),
+                  ElevatedButton(
+                    onPressed: _pickStoreLogo,
+                    child: Text(locale.uploadStoreLogo),
                   ),
-                ),
+                ],
               ),
-              SizedBox(height: 20),
-              Text(
-                'Business Hours',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              TextField(
-                controller: _businessHoursController,
-                decoration: InputDecoration(
-                  hintText: 'Enter your business hours',
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              SizedBox(height: 20),
-              Text(
-                'Delivery Options',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              TextField(
-                controller: _deliveryOptionsController,
-                decoration: InputDecoration(
-                  hintText: 'Enter your delivery options',
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              SizedBox(height: 20),
-              Text(
-                'Store Logo',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 10),
-              Center(
-                child: Column(
-                  children: [
-                    _storeLogo != null
-                        ? Image.file(_storeLogo!, height: 100)
-                        : Icon(Icons.image, size: 100, color: Colors.grey),
-                    ElevatedButton(
-                      onPressed: _pickStoreLogo,
-                      child: Text('Upload Store Logo'),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 30),
-              Center(
-                child: _isLoading
-                    ? CircularProgressIndicator()
-                    : ElevatedButton(
-                        onPressed: _completeRegistration,
-                        child: Text('Complete Registration'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black,
-                          foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 100, vertical: 15),
-                          textStyle: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
+            ),
+            const SizedBox(height: 30),
+            Center(
+              child: _isLoading
+                  ? const CircularProgressIndicator()
+                  : ElevatedButton(
+                      onPressed: _completeRegistration,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 100, vertical: 15),
+                        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
-              ),
-            ],
-          ),
+                      child: Text(locale.completeRegistration),
+                    ),
+            ),
+          ],
         ),
       ),
     );

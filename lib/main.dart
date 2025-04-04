@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -6,16 +7,22 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:provider/provider.dart';
 
+import 'firebase_options.dart';
 import 'pages/login.dart';
 import 'pages/onboard.dart';
 import 'pages/settings.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
-  Stripe.publishableKey = "pk_test_..."; // Replace with your real key
-  await Stripe.instance.applySettings();
+  // ✅ Only initialize Stripe on native platforms
+  if (!kIsWeb) {
+    Stripe.publishableKey = "pk_test_..."; // Replace with real key
+    await Stripe.instance.applySettings();
+  }
 
   runApp(
     ChangeNotifierProvider(
@@ -39,7 +46,7 @@ class MyApp extends StatelessWidget {
       darkTheme: ThemeData.dark(),
       themeMode: themeProvider.themeMode,
       localizationsDelegates: const [
-        AppLocalizations.delegate, // Generated
+        AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,

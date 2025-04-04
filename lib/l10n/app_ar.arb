@@ -68,12 +68,12 @@
 
   "relatedProducts": "منتجات مشابهة",
   "noRelatedProducts": "لا توجد منتجات مشابهة.",
-  "foodSaved": "شراء هذا المنتج يوفر {kg} كجم من الطعام!",
-  "@foodSaved": {
-    "placeholders": {
-      "kg": {}
-    }
-  },
+  "foodSaved": "هذا البائع وفر {kg} كجم من الطعام!",
+"@foodSaved": {
+  "placeholders": {
+    "kg": {}
+  }
+},
   "paymentDetails": "تفاصيل الدفع",
   "youAreSaving": "أنت توفر: {amount}",
   "@youAreSaving": {
@@ -150,9 +150,129 @@
   "status": "الحالة",
   "statusCompleted": "مكتمل",
   "statusCancelled": "ملغي",
-  "statusPending": "قيد الانتظار"
+  "statusPending": "قيد الانتظار",
+  "storeInitialSetup": "إعداد المتجر الأولي",
+  "storeName": "اسم المتجر",
+  "storeNameHint": "أدخل اسم المتجر",
+  "businessHours": "ساعات العمل",
+  "businessHoursHint": "أدخل ساعات العمل",
+  "deliveryOptions": "خيارات التوصيل",
+  "deliveryOptionsHint": "أدخل خيارات التوصيل",
+  "storeLogo": "شعار المتجر",
+  "uploadStoreLogo": "تحميل شعار المتجر",
+  "completeRegistration": "إكمال التسجيل",
+   "addProductTitle": "إضافة منتج",
+  "productName": "اسم المنتج",
+  "price": "السعر",
+  "originalPrice": "السعر الأصلي",
+  "expiryDate": "تاريخ الانتهاء (YYYY-MM-DD)",
+  "details": "تفاصيل",
+  "weight": "الوزن (كجم)",
+  "rating": "التقييم (0-5)",
+  "noImageSelected": "لم يتم اختيار صورة.",
+  "pickImage": "اختر صورة",
+  "addProduct": "أضف المنتج",
+  "fillAllFields": "يرجى ملء جميع الحقول",
+  "productAdded": "تمت إضافة المنتج بنجاح!",
+  "userNotAuthenticated": "المستخدم غير مسجل الدخول",
+  "imageUploadFailed": "فشل تحميل الصورة: {error}",
+  "imagePickFailed": "فشل اختيار الصورة: {error}",
+  "productAddFailed": "فشل إضافة المنتج: {error}",
+   "editProduct": "تعديل المنتج",
+  "productName": "اسم المنتج",
+  "price": "السعر",
+  "originalPrice": "السعر الأصلي",
+  "expiryDate": "تاريخ الانتهاء (YYYY-MM-DD)",
+  "details": "تفاصيل",
+  "weight": "الوزن (كجم)",
+  "rating": "التقييم (0-5)",
+  "noImage": "لم يتم تحديد صورة.",
+  "pickImage": "اختر صورة",
+  "saveChanges": "حفظ التعديلات",
+  "pleaseFillAllFields": "يرجى ملء جميع الحقول",
+  "error": "خطأ",
+  "manageProducts": "إدارة المنتجات",
+  "noProductsFound": "لم يتم العثور على منتجات.",
+  "priceLabel": "السعر: $",
+  "productDeleted": "تم حذف المنتج بنجاح",
+  "deleteError": "حدث خطأ أثناء حذف المنتج: {error}",
+  "edit": "تعديل",
+  "delete": "حذف",
+  "unknownProduct": "منتج غير معروف",
+  "noDetailsAvailable": "لا توجد تفاصيل متاحة",
+  "unknownCustomer": "عميل غير معروف",
+   "statusPending": "قيد الانتظار",
+  "statusCompleted": "مكتمل",
+  "statusCancelled": "أُلغي",
+  "profileTitle": "الملف الشخصي",
+  "storeName": "اسم المتجر",
+  "address": "العنوان",
+  "contactDetails": "معلومات الاتصال",
+  "businessHours": "ساعات العمل",
+  "deliveryOptions": "خيارات التوصيل",
+  "noStoreLogo": "لم يتم اختيار شعار للمتجر.",
+  "pickStoreLogo": "اختر شعار المتجر",
+  "updateStoreInfo": "تحديث معلومات المتجر",
+  "logoutError": "حدث خطأ أثناء تسجيل الخروج",
+  "updateSuccess": "تم تحديث معلومات المتجر بنجاح",
+  "updateError": "حدث خطأ أثناء تحديث معلومات المتجر",
+  "fillAllFields": "يرجى ملء جميع الحقول",
+  "storeFetchError": "حدث خطأ أثناء جلب بيانات المتجر",
+   "welcomeBaraka": "مرحبًا بك في بركة!",
+  "joinMission": "انضم إلينا لإحداث فرق من خلال تقليل هدر الطعام ومساعدة مجتمعك.",
+  "storeName": "اسم المتجر",
+  "storeLocation": "موقع المتجر",
+  "nationalID": "الرقم القومي",
+  "businessGoals": "أهداف العمل",
+  "uploadStoreImage": "تحميل صورة المتجر",
+  "register": "تسجيل",
+  "requiredField": "حقل مطلوب",
+  "userNotAuthenticated": "المستخدم غير مصدق. يرجى تسجيل الدخول مرة أخرى.",
+  "registrationError": "حدث خطأ",
+  "registering": "جاري التسجيل...",
+  "unnamedProduct": "منتج غير مسمى",
+  "errorPickingImage": "حدث خطأ أثناء اختيار الصورة: {error}",
+"@errorPickingImage": {
+  "placeholders": {
+    "error": {}
+  }
+},
+"errorLoggingOut": "حدث خطأ أثناء تسجيل الخروج",
+"orderId": "رقم الطلب",
+"customer": "العميل",
+"total": "الإجمالي",
+"statusPending": "قيد الانتظار",
+"statusCompleted": "مكتمل",
+"statusCancelled": "ملغي",
+"noOrdersFound": "لم يتم العثور على طلبات.",
+"myOrders": "طلباتي",
+"orderDetails": "تفاصيل الطلب",
+"statusUpdated": "تم تحديث حالة الطلب إلى {status}",
+"@statusUpdated": {
+  "placeholders": {
+    "status": {}
+  }
+},
+"statusUpdateError": "فشل في تحديث حالة الطلب: {error}",
+"@statusUpdateError": {
+  "placeholders": {
+    "error": {}
+  }
+},
+"markAsProcessing": "تعيين كـ قيد المعالجة",
+"markAsCompleted": "تعيين كـ مكتمل",
+"markAsCancelled": "تعيين كـ ملغي",
+"statusProcessing": "قيد المعالجة"
+
+
 
 
 
 
 }
+
+
+
+
+
+

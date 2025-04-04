@@ -4,9 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'product_model.dart';
 
-/// Reuse the same color constants
 const kBackgroundColor = Color(0xFFFAF3E0);
 const kDarkBrown = Color(0xFF5A3D2B);
 const kSoftBrown = Color(0xFF8B5E3C);
@@ -32,7 +32,6 @@ class _AddProductPageState extends State<AddProductPage> {
   final _firestore = FirebaseFirestore.instance;
   bool _isLoading = false;
 
-  /// Common input decoration to give consistent styling
   InputDecoration _inputDecoration(String label) {
     return InputDecoration(
       labelText: label,
@@ -49,6 +48,7 @@ class _AddProductPageState extends State<AddProductPage> {
   }
 
   Future<void> _pickImage() async {
+    final locale = AppLocalizations.of(context)!;
     try {
       final pickedFile =
           await ImagePicker().pickImage(source: ImageSource.gallery);
@@ -59,12 +59,13 @@ class _AddProductPageState extends State<AddProductPage> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to pick image: $e')),
+        SnackBar(content: Text(locale.imagePickFailed(e.toString()))),
       );
     }
   }
 
   Future<void> _addProduct() async {
+    final locale = AppLocalizations.of(context)!;
     if (_nameController.text.isEmpty ||
         _priceController.text.isEmpty ||
         _originalPriceController.text.isEmpty ||
@@ -74,7 +75,7 @@ class _AddProductPageState extends State<AddProductPage> {
         _ratingController.text.isEmpty ||
         _image == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all fields')),
+        SnackBar(content: Text(locale.fillAllFields)),
       );
       return;
     }
@@ -86,7 +87,6 @@ class _AddProductPageState extends State<AddProductPage> {
       if (user != null) {
         final productId = _firestore.collection('products').doc().id;
 
-        // Save image to Firebase Storage
         String imageUrl = '';
         try {
           final storageRef = FirebaseStorage.instance
@@ -97,12 +97,11 @@ class _AddProductPageState extends State<AddProductPage> {
           imageUrl = await storageRef.getDownloadURL();
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Image upload failed: $e')),
+            SnackBar(content: Text(locale.imageUploadFailed(e.toString()))),
           );
           return;
         }
 
-        // Create product object
         final product = Product(
           id: productId,
           name: _nameController.text.trim(),
@@ -117,24 +116,23 @@ class _AddProductPageState extends State<AddProductPage> {
           rating: double.tryParse(_ratingController.text) ?? 0.0,
         );
 
-        // Save product to Firestore with userId
         await _firestore.collection('products').doc(productId).set({
           ...product.toMap(),
           'userId': user.uid,
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Product added successfully!')),
+          SnackBar(content: Text(locale.productAdded)),
         );
         Navigator.pop(context);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User not authenticated')),
+          SnackBar(content: Text(locale.userNotAuthenticated)),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to add product: $e')),
+        SnackBar(content: Text(locale.productAddFailed(e.toString()))),
       );
     } finally {
       setState(() => _isLoading = false);
@@ -143,89 +141,68 @@ class _AddProductPageState extends State<AddProductPage> {
 
   @override
   Widget build(BuildContext context) {
+    final locale = AppLocalizations.of(context)!;
     return Scaffold(
-      /// 1) Off-white background
       backgroundColor: kBackgroundColor,
-
-      /// 2) Soft brown AppBar
       appBar: AppBar(
         backgroundColor: kSoftBrown,
-        title: const Text('Add Product', style: TextStyle(color: Colors.white)),
+        title: Text(locale.addProductTitle, style: const TextStyle(color: Colors.white)),
       ),
-
-      /// 3) Body
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            /// Product Name
             TextField(
               controller: _nameController,
-              decoration: _inputDecoration('Product Name'),
+              decoration: _inputDecoration(locale.productName),
               style: const TextStyle(color: kDarkBrown),
             ),
             const SizedBox(height: 10),
-
-            /// Price
             TextField(
               controller: _priceController,
-              decoration: _inputDecoration('Price'),
+              decoration: _inputDecoration(locale.price),
               keyboardType: TextInputType.number,
               style: const TextStyle(color: kDarkBrown),
             ),
             const SizedBox(height: 10),
-
-            /// Original Price
             TextField(
               controller: _originalPriceController,
-              decoration: _inputDecoration('Original Price'),
+              decoration: _inputDecoration(locale.originalPrice),
               keyboardType: TextInputType.number,
               style: const TextStyle(color: kDarkBrown),
             ),
             const SizedBox(height: 10),
-
-            /// Expiry Date
             TextField(
               controller: _expiryDateController,
-              decoration: _inputDecoration('Expiry Date (YYYY-MM-DD)'),
+              decoration: _inputDecoration(locale.expiryDate),
               keyboardType: TextInputType.datetime,
               style: const TextStyle(color: kDarkBrown),
             ),
             const SizedBox(height: 10),
-
-            /// Details
             TextField(
               controller: _detailsController,
-              decoration: _inputDecoration('Details'),
+              decoration: _inputDecoration(locale.details),
               style: const TextStyle(color: kDarkBrown),
             ),
             const SizedBox(height: 10),
-
-            /// Weight
             TextField(
               controller: _weightController,
-              decoration: _inputDecoration('Weight (kg)'),
+              decoration: _inputDecoration(locale.weight),
               keyboardType: TextInputType.number,
               style: const TextStyle(color: kDarkBrown),
             ),
             const SizedBox(height: 10),
-
-            /// Rating
             TextField(
               controller: _ratingController,
-              decoration: _inputDecoration('Rating (0-5)'),
+              decoration: _inputDecoration(locale.rating),
               keyboardType: TextInputType.number,
               style: const TextStyle(color: kDarkBrown),
             ),
             const SizedBox(height: 20),
-
-            /// Image
             _image != null
                 ? Image.file(_image!, height: 200)
-                : const Text('No image selected.', style: TextStyle(color: kDarkBrown)),
-
-            /// Pick Image Button
+                : Text(locale.noImageSelected, style: const TextStyle(color: kDarkBrown)),
             TextButton(
               onPressed: _pickImage,
               style: TextButton.styleFrom(
@@ -235,11 +212,9 @@ class _AddProductPageState extends State<AddProductPage> {
                   fontSize: 16,
                 ),
               ),
-              child: const Text('Pick Image'),
+              child: Text(locale.pickImage),
             ),
             const SizedBox(height: 20),
-
-            /// Add Product Button
             _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : SizedBox(
@@ -253,9 +228,9 @@ class _AddProductPageState extends State<AddProductPage> {
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      child: const Text(
-                        'Add Product',
-                        style: TextStyle(
+                      child: Text(
+                        locale.addProduct,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,

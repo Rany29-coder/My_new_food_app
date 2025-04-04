@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import 'edit_product.dart';
 import 'product_model.dart';
 import 'add_product.dart';
 
-/// Reuse these palette constants to stay consistent
-const kBackgroundColor = Color(0xFFFAF3E0);   // Off-white, Onboard BG
-const kDarkBrown = Color(0xFF5A3D2B);        // Dark brown
-const kSoftBrown = Color(0xFF8B5E3C);        // Soft brown
+const kBackgroundColor = Color(0xFFFAF3E0);
+const kDarkBrown = Color(0xFF5A3D2B);
+const kSoftBrown = Color(0xFF8B5E3C);
 
 class ManageProducts extends StatefulWidget {
   const ManageProducts({Key? key}) : super(key: key);
@@ -36,11 +36,11 @@ class _ManageProductsState extends State<ManageProducts> {
     try {
       await _firestore.collection('products').doc(productId).delete();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Product deleted successfully')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.productDeleted)),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error deleting product: $e')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.deleteError(e.toString()))),
       );
     } finally {
       setState(() => _isLoading = false);
@@ -49,16 +49,15 @@ class _ManageProductsState extends State<ManageProducts> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      /// 1) Match Onboard's BG color
-      backgroundColor: kBackgroundColor,
+    final locale = AppLocalizations.of(context)!;
 
-      /// 2) Style the AppBar with the Soft Brown
+    return Scaffold(
+      backgroundColor: kBackgroundColor,
       appBar: AppBar(
-        backgroundColor: kSoftBrown, 
-        title: const Text(
-          'Manage Products',
-          style: TextStyle(color: Colors.white),
+        backgroundColor: kSoftBrown,
+        title: Text(
+          locale.manageProducts,
+          style: const TextStyle(color: Colors.white),
         ),
         actions: [
           IconButton(
@@ -66,14 +65,12 @@ class _ManageProductsState extends State<ManageProducts> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => AddProductPage()),
+                MaterialPageRoute(builder: (context) => const AddProductPage()),
               );
             },
           ),
         ],
       ),
-
-      /// 3) Show loading or data
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : StreamBuilder<QuerySnapshot>(
@@ -82,16 +79,13 @@ class _ManageProductsState extends State<ManageProducts> {
                   .where('userId', isEqualTo: userId)
                   .snapshots(),
               builder: (context, snapshot) {
-                /// Handle connection states
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                /// If no data
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return const Center(child: Text('No products found.'));
+                  return Center(child: Text(locale.noProductsFound));
                 }
 
-                /// Build the List
                 final products = snapshot.data!.docs;
                 return ListView.builder(
                   itemCount: products.length,
@@ -100,15 +94,14 @@ class _ManageProductsState extends State<ManageProducts> {
                     final productData = product.data() as Map<String, dynamic>?;
 
                     final productName =
-                        productData?['productName'] ?? 'Unnamed Product';
+                        productData?['productName'] ?? locale.unnamedProduct;
                     final productPrice =
                         productData?['price']?.toString() ?? '0.0';
                     final productImage = productData?['imageUrl'] ??
                         'https://via.placeholder.com/150';
 
                     return Card(
-                      /// 4) Slightly different card style
-                      color: Colors.white, // or a very light brown if you prefer
+                      color: Colors.white,
                       margin: const EdgeInsets.symmetric(
                           vertical: 8, horizontal: 16),
                       shape: RoundedRectangleBorder(
@@ -133,7 +126,7 @@ class _ManageProductsState extends State<ManageProducts> {
                           ),
                         ),
                         subtitle: Text(
-                          'Price: \$${productPrice}',
+                          "${locale.priceLabel}: \$${productPrice}",
                           style: const TextStyle(color: kSoftBrown),
                         ),
                         trailing: Row(
@@ -141,7 +134,7 @@ class _ManageProductsState extends State<ManageProducts> {
                           children: [
                             IconButton(
                               icon: const Icon(Icons.edit),
-                              color: Colors.blue, // Keep or change to brown
+                              color: Colors.blue,
                               onPressed: () {
                                 Navigator.push(
                                   context,
@@ -150,6 +143,7 @@ class _ManageProductsState extends State<ManageProducts> {
                                       product: Product.fromMap(
                                         productData!,
                                         product.id,
+                                        context, // Pass BuildContext instead of userId
                                       ),
                                     ),
                                   ),
@@ -158,7 +152,7 @@ class _ManageProductsState extends State<ManageProducts> {
                             ),
                             IconButton(
                               icon: const Icon(Icons.delete),
-                              color: Colors.red, // Keep or change to a red/brown
+                              color: Colors.red,
                               onPressed: () async {
                                 await _deleteProduct(product.id);
                               },

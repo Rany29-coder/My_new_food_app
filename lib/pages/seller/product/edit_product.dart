@@ -4,9 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'product_model.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-/// Color Palette (same as Onboard and other pages)
-const kBackgroundColor = Color(0xFFFAF3E0); 
+const kBackgroundColor = Color(0xFFFAF3E0);
 const kDarkBrown = Color(0xFF5A3D2B);
 const kSoftBrown = Color(0xFF8B5E3C);
 
@@ -38,10 +38,8 @@ class _EditProductPageState extends State<EditProductPage> {
     super.initState();
     _nameController = TextEditingController(text: widget.product.name);
     _priceController = TextEditingController(text: widget.product.price.toString());
-    _originalPriceController =
-        TextEditingController(text: widget.product.originalPrice.toString());
-    _expiryDateController =
-        TextEditingController(text: widget.product.expiryDate.toIso8601String());
+    _originalPriceController = TextEditingController(text: widget.product.originalPrice.toString());
+    _expiryDateController = TextEditingController(text: widget.product.expiryDate.toIso8601String());
     _detailsController = TextEditingController(text: widget.product.details);
     _weightController = TextEditingController(text: widget.product.weight.toString());
     _ratingController = TextEditingController(text: widget.product.rating.toString());
@@ -55,6 +53,8 @@ class _EditProductPageState extends State<EditProductPage> {
   }
 
   Future<void> _editProduct() async {
+    final locale = AppLocalizations.of(context)!;
+
     if (_nameController.text.isEmpty ||
         _priceController.text.isEmpty ||
         _originalPriceController.text.isEmpty ||
@@ -63,7 +63,7 @@ class _EditProductPageState extends State<EditProductPage> {
         _weightController.text.isEmpty ||
         _ratingController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all fields')),
+        SnackBar(content: Text(locale.pleaseFillAllFields)),
       );
       return;
     }
@@ -80,7 +80,7 @@ class _EditProductPageState extends State<EditProductPage> {
           originalPrice: double.parse(_originalPriceController.text),
           expiryDate: DateTime.parse(_expiryDateController.text),
           details: _detailsController.text,
-          imageUrl: widget.product.imageUrl, // TODO: upload new image if changed
+          imageUrl: widget.product.imageUrl,
           weight: double.parse(_weightController.text),
           rating: double.parse(_ratingController.text),
         );
@@ -94,14 +94,13 @@ class _EditProductPageState extends State<EditProductPage> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
+        SnackBar(content: Text("${AppLocalizations.of(context)!.error}: $e")),
       );
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
-  /// Common InputDecoration for consistent styling
   InputDecoration _inputDecoration(String label) {
     return InputDecoration(
       labelText: label,
@@ -119,106 +118,80 @@ class _EditProductPageState extends State<EditProductPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      /// Use the same off-white background
-      backgroundColor: kBackgroundColor,
+    final locale = AppLocalizations.of(context)!;
 
-      /// AppBar with soft brown color
+    return Scaffold(
+      backgroundColor: kBackgroundColor,
       appBar: AppBar(
         backgroundColor: kSoftBrown,
-        title: const Text('Edit Product', style: TextStyle(color: Colors.white)),
+        title: Text(locale.editProduct, style: const TextStyle(color: Colors.white)),
       ),
-
-      /// Main Body
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            /// Product Name
             TextField(
               controller: _nameController,
-              decoration: _inputDecoration('Product Name'),
+              decoration: _inputDecoration(locale.productName),
               style: const TextStyle(color: kDarkBrown),
             ),
             const SizedBox(height: 10),
-
-            /// Price
             TextField(
               controller: _priceController,
-              decoration: _inputDecoration('Price'),
+              decoration: _inputDecoration(locale.price),
               keyboardType: TextInputType.number,
               style: const TextStyle(color: kDarkBrown),
             ),
             const SizedBox(height: 10),
-
-            /// Original Price
             TextField(
               controller: _originalPriceController,
-              decoration: _inputDecoration('Original Price'),
+              decoration: _inputDecoration(locale.originalPrice),
               keyboardType: TextInputType.number,
               style: const TextStyle(color: kDarkBrown),
             ),
             const SizedBox(height: 10),
-
-            /// Expiry Date
             TextField(
               controller: _expiryDateController,
-              decoration: _inputDecoration('Expiry Date (YYYY-MM-DD)'),
+              decoration: _inputDecoration(locale.expiryDate),
               keyboardType: TextInputType.datetime,
               style: const TextStyle(color: kDarkBrown),
             ),
             const SizedBox(height: 10),
-
-            /// Details
             TextField(
               controller: _detailsController,
-              decoration: _inputDecoration('Details'),
+              decoration: _inputDecoration(locale.details),
               style: const TextStyle(color: kDarkBrown),
             ),
             const SizedBox(height: 10),
-
-            /// Weight
             TextField(
               controller: _weightController,
-              decoration: _inputDecoration('Weight (kg)'),
+              decoration: _inputDecoration(locale.weight),
               keyboardType: TextInputType.number,
               style: const TextStyle(color: kDarkBrown),
             ),
             const SizedBox(height: 10),
-
-            /// Rating
             TextField(
               controller: _ratingController,
-              decoration: _inputDecoration('Rating (0-5)'),
+              decoration: _inputDecoration(locale.rating),
               keyboardType: TextInputType.number,
               style: const TextStyle(color: kDarkBrown),
             ),
             const SizedBox(height: 20),
-
-            /// Image
             _image != null
                 ? Image.file(_image!, height: 200)
                 : (widget.product.imageUrl.isNotEmpty
                     ? Image.network(widget.product.imageUrl, height: 200)
-                    : const Text('No image selected.',
-                        style: TextStyle(color: kDarkBrown))),
-
-            /// Pick Image Button
+                    : Text(locale.noImage, style: const TextStyle(color: kDarkBrown))),
             TextButton(
               onPressed: _pickImage,
               style: TextButton.styleFrom(
                 foregroundColor: kSoftBrown,
-                textStyle: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
+                textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
-              child: const Text('Pick Image'),
+              child: Text(locale.pickImage),
             ),
             const SizedBox(height: 20),
-
-            /// Save Changes Button
             _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : SizedBox(
@@ -232,13 +205,9 @@ class _EditProductPageState extends State<EditProductPage> {
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      child: const Text(
-                        'Save Changes',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      child: Text(
+                        locale.saveChanges,
+                        style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),

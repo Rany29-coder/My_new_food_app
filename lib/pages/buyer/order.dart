@@ -15,17 +15,18 @@ class _OrderState extends State<Order> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   String? userId;
-  List<DocumentSnapshot> _orders = [];
 
   @override
   void initState() {
     super.initState();
-    _fetchUser();
-  }
-
-  void _fetchUser() {
-    setState(() {
-      userId = _auth.currentUser?.uid;
+    // Wait a bit to allow Firebase to initialize on Web
+    Future.delayed(const Duration(milliseconds: 300), () {
+      final currentUser = _auth.currentUser;
+      if (currentUser != null) {
+        setState(() {
+          userId = currentUser.uid;
+        });
+      }
     });
   }
 
@@ -57,15 +58,22 @@ class _OrderState extends State<Order> {
                   .orderBy('timestamp', descending: true)
                   .snapshots(),
               builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Text(
+                      'Error loading orders: ${snapshot.error}',
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  );
+                }
+
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
-                  _orders = snapshot.data!.docs;
-                }
+                final docs = snapshot.data?.docs ?? [];
 
-                if (_orders.isEmpty) {
+                if (docs.isEmpty) {
                   return Center(
                     child: Text(
                       locale.noOrdersFound,
@@ -76,19 +84,15 @@ class _OrderState extends State<Order> {
 
                 return ListView.builder(
                   padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-                  itemCount: _orders.length,
+                  itemCount: docs.length,
                   itemBuilder: (context, index) {
-                    final order = _orders[index];
-                    final orderData = order.data() as Map<String, dynamic>?;
-
-                    if (orderData == null) return const SizedBox();
-
-                    final productName = orderData['productName'] ?? locale.unknownProduct;
-                    final quantity = orderData['quantity'] ?? 0;
-                    final totalPrice = (orderData['totalPrice'] as num?)?.toDouble() ?? 0.0;
-                    final status = orderData['status'] ?? 'Pending';
-                    final timestamp = orderData['timestamp'] != null
-                        ? (orderData['timestamp'] as Timestamp).toDate()
+                    final order = docs[index].data() as Map<String, dynamic>;
+                    final productName = order['productName'] ?? locale.unknownProduct;
+                    final quantity = order['quantity'] ?? 0;
+                    final totalPrice = (order['totalPrice'] as num?)?.toDouble() ?? 0.0;
+                    final status = order['status'] ?? 'Pending';
+                    final timestamp = order['timestamp'] != null
+                        ? (order['timestamp'] as Timestamp).toDate()
                         : null;
 
                     return Container(
@@ -117,50 +121,26 @@ class _OrderState extends State<Order> {
                             ),
                           ),
                           const SizedBox(height: 6),
-
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                "${locale.quantity}: $quantity",
-                                style: const TextStyle(fontSize: 16, color: Colors.brown),
-                              ),
-                              Text(
-                                "${locale.total}: \$${totalPrice.toStringAsFixed(2)}",
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF8B5E3C),
-                                ),
-                              ),
+                              Text("${locale.quantity}: $quantity"),
+                              Text("${locale.total}: \$${totalPrice.toStringAsFixed(2)}"),
                             ],
                           ),
-                          const SizedBox(height: 6),
-
                           if (timestamp != null)
                             Text(
                               "${locale.date}: ${DateFormat('MMM dd, yyyy - hh:mm a').format(timestamp)}",
-                              style: const TextStyle(fontSize: 14, color: Colors.grey),
+                              style: const TextStyle(color: Colors.grey),
                             ),
-
                           const SizedBox(height: 6),
-
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Row(
-                                children: [
-                                  _getStatusIcon(status),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    "${locale.status}: ${_getLocalizedStatus(status, locale)}",
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: _getStatusColor(status),
-                                    ),
-                                  ),
-                                ],
+                              _getStatusIcon(status),
+                              const SizedBox(width: 6),
+                              Text(
+                                "${locale.status}: ${_getLocalizedStatus(status, locale)}",
+                                style: TextStyle(color: _getStatusColor(status)),
                               ),
                             ],
                           ),
