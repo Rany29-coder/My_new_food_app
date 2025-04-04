@@ -82,13 +82,17 @@
   "youAreSaving": "أنت توفر: {amount}",
   "@youAreSaving": {
     "placeholders": {
-      "amount": {}
+      "amount": {
+        "type": "Object"
+      }
     }
   },
   "totalPrice": "السعر الإجمالي: {amount}",
   "@totalPrice": {
     "placeholders": {
-      "amount": {}
+      "amount": {
+        "type": "Object"
+      }
     }
   },
   "nameOnCard": "الاسم على البطاقة",

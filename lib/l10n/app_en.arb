@@ -81,13 +81,17 @@
   "youAreSaving": "You're saving: {amount}",
   "@youAreSaving": {
     "placeholders": {
-      "amount": {}
+      "amount": {
+        "type": "Object"
+      }
     }
   },
   "totalPrice": "Total Price: {amount}",
   "@totalPrice": {
     "placeholders": {
-      "amount": {}
+      "amount": {
+        "type": "Object"
+      }
     }
   },
   "nameOnCard": "Name on Card",
