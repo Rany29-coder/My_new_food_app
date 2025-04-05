@@ -287,7 +287,7 @@ class _DetailsState extends State<Details> {
             ),
             const SizedBox(height: 12),
             Text(
-              locale.foodSaved((widget.weight! * _quantity).toStringAsFixed(2)),
+              locale.foodSaved(widget.weight! * _quantity),
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
