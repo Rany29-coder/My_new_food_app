@@ -212,7 +212,9 @@
   "statusUpdated": "Order status updated to {status}",
   "@statusUpdated": {
     "placeholders": {
-      "status": {}
+      "status": {
+        "type": "Object"
+      }
     }
   },
   "statusUpdateError": "Failed to update order status: {error}",

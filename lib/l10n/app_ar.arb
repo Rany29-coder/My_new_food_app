@@ -212,7 +212,9 @@
   "statusUpdated": "تم تحديث حالة الطلب إلى {status}",
   "@statusUpdated": {
     "placeholders": {
-      "status": {}
+      "status": {
+        "type": "Object"
+      }
     }
   },
   "statusUpdateError": "فشل في تحديث حالة الطلب: {error}",
